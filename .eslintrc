@@ -1,9 +1,6 @@
 {
   "extends": ["standard", "prettier", "prettier/standard"],
   "plugins": ["mocha"],
-  "env": {
-    "mocha": true
-  },
   "rules": {
     "prefer-template": "error",
     "mocha/no-exclusive-tests": "error",

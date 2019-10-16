@@ -1,2 +1,4 @@
 env:
   worker: true
+  browser: true
+  node: false
