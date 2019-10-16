@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+	<title>Peter Müller</title>
+	<subtitle>My thoughts. The ones that didn&#39;t slip away</subtitle>
+	<link href="https://mntr.dk/feed.xml" rel="self"/>
+	<link href="https://mntr.dk"/>
+	<updated>2014-03-17T03:25:29+01:00</updated>
+	<id>https://mntr.dk/</id>
+	<author>
+		<name>Peter Brandt Müller</name>
+		<email>munter@fumle.dk</email>
+	</author>
+	
+	<entry>
+		<title>Switching to 11ty</title>
+		<link href="https://mntr.dk/2019/switching-to-11ty/"/>
+		<updated>2019-07-14T19:41:11+02:00</updated>
+		<id>https://mntr.dk/2019/switching-to-11ty/</id>
+		<content type="html">&lt;p&gt;I&#39;ve long been annoyed with Jekyll for building my own website. Not because Jekyll is lacking in quality in any way, but rather because it&#39;s written in a language and a package ecosystem that I&#39;m not at home in. It feels like everytime I need to make updates to my webpage (which is not very often at all), I run into some sort of trouble with my local ruby installation, or bundler, or jekyll itself. I feel entirely incompetent to fix it and I&#39;m really not willing to make the effort to learn those skills in the foreseeable future.&lt;/p&gt;
+&lt;p&gt;On the other hand I am very much at home in the nodejs ecosystem, and so are many others. Over the years the static site generator alternatives have popped up in large quantities and flavors. It&#39;s an ecosystem I understand, know hoe to debug and am willing to contribute to. Because most of the Twitter echochamber I&#39;m participating in has thrown their love at &lt;a href=&quot;https://twitter.com/zachleat&quot;&gt;Zach Leatherman&#39;s&lt;/a&gt; &lt;a href=&quot;https://www.11ty.io/&quot;&gt;11ty&lt;/a&gt;, I&#39;m going to give that a shot.&lt;/p&gt;
+&lt;!--more--&gt;
+&lt;p&gt;There is an ulterior motive behind it as well. With my long focus on automatic web performance optimization tooling like &lt;a href=&quot;https://assetgraph.org/&quot;&gt;Assetgraph&lt;/a&gt; and the lack of integrated tooling in 11ty, I think I will have an optimal setting for playing around with writing plugins or tutorials for how to apply all the tooling I&#39;ve worked on to an 11ty setup, thus helping myself and hopefully others to get faster websites with little extra work.&lt;/p&gt;
+&lt;p&gt;Let&#39;s kick this off!&lt;/p&gt;
+&lt;h2&gt;Installations&lt;/h2&gt;
+&lt;p&gt;I started out with running the obligatory minimum installation to get 11ty installed in my project root:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;npm install --save-dev @11ty/eleventy
+&lt;/code&gt;&lt;/pre&gt;
+</content>
+	</entry>
+	
+	<entry>
+		<title>Content-addressable Browser Caching</title>
+		<link href="https://mntr.dk/2016/content-addressable-browser-caching/"/>
+		<updated>2016-05-24T19:41:11+02:00</updated>
+		<id>https://mntr.dk/2016/content-addressable-browser-caching/</id>
+		<content type="html">&lt;p&gt;What if it were possible to use content-addressable caching in browsers instead of URL-based caching? The increased cache hits would be highly beneficial, especially for sites depending on 3rd party libraries via a CDN. It turns out this &lt;strong&gt;is&lt;/strong&gt; possible. The subresource integrity specification gives us all we need. But it turns out it&#39;s not that simple.&lt;/p&gt;
+&lt;p&gt;None of the ideas I&#39;m describing here are new, and none of them are concieved by me. I just happened to get this idea, like many others, and tried to get the standards bodies to implement it. This lead to a lot of historical digging because much of the knowledge about this is buried in mailing lists, blog posts that only exist in historical web archives and spec maintainers&#39; heads. I&#39;m writing this post in the hope that next time someone gets this great idea, they won&#39;t have to do the same work I just did.&lt;/p&gt;
+&lt;!--more--&gt;
+&lt;h2&gt;Content-addressable&lt;/h2&gt;
+&lt;p&gt;Addressing an asset based on its content rather than its location is not a new thing. &lt;a href=&quot;https://en.wikipedia.org/wiki/Content-addressable_storage&quot;&gt;Content-addressable storage&lt;/a&gt; has been around for a long time and is beneficial in situations where the content is known not to change. Instead of a location to reference the content, you use a cryptographic hash of the content, which uniquely identifies it.&lt;/p&gt;
+&lt;p&gt;This technique should not be new to modern web developers, as we are already partially buying into immutable files with our far-future-expires caching of files that have a hash of their content as part of their file name. A great method for both getting long time caching and full control over exactly when to use updated assets, because they change identity. You have probably also used content-addressable systems with git, bittorrent or bitcoin.&lt;/p&gt;
+&lt;p&gt;But even though parts of content-addressability have been adopted in web development file naming regimes, we are not reaping the full benefits of it in regards to caching, since browser caches are based on URLs instead of content identity.&lt;/p&gt;
+&lt;p&gt;This is where a new W3C specification that most people haven&#39;t heard of comes in.&lt;/p&gt;
+&lt;h2&gt;Subresource Integrity&lt;/h2&gt;
+&lt;p&gt;The &lt;a href=&quot;https://www.w3.org/TR/SRI/&quot;&gt;subresource integrity specification&lt;/a&gt; describes a way for browsers to verify that an asset they have downloaded is indeed the asset that was expected. The developer declaring a cryptographic hash of the expected content of the downloaded asset. When the browser has fetched the asset it compares the declared cryptographic hash to that of the assets content. If there is a mismatch between the two hashes the browser will refuse to parse, evaluate and cache the asset.&lt;/p&gt;
+&lt;p&gt;Despite the choir of people that see no value in this on Reddit and hacker news, it&#39;s actually a really useful technique to secure your use of 3rd party dependencies or even your own assets. SSL will secure your transport, but doesn&#39;t guarantee that the asset has not been compromised on the originating server. There are lots of situations where the static assets you depend on are hosted on a server outside of your control, like a CDN, or even just on a different machine than your main web server.&lt;/p&gt;
+&lt;p&gt;So in order to gain this extra security you use subresource integrity. It&#39;s tedious declaring these hashes, but you can use tooling to help you do it.&lt;/p&gt;
+&lt;p&gt;The clever reader will now have noticed that content-addressability and subresource integrity have one thing in common; The cryptographic hash that uniquely identifies the content. So this was the idea I had:&lt;/p&gt;
+&lt;h2&gt;Content-addressable Browser Cache&lt;/h2&gt;
+&lt;p&gt;If a cryptographic hash uniquely identifies the content of an asset and subresource integrity hashes are declared by the developer, why not use these hashes as indexes for caching the asset instead of using the URL?&lt;/p&gt;
+&lt;p&gt;The benefits of doing this would be that you could leverage the cache across domains. Say you use jQuery 2.2.1 from a CDN on your site. If a visitor visits your site and doesn&#39;t have jQuery 2.2.1 on that URL in the browser cache it&#39;s a cache miss and a download. But what if the visitor had jQuery 2.2.1 from a &lt;strong&gt;different&lt;/strong&gt; URL in the cache? The hashes of these two jQuery assets are identical. So if your site and the other site your visitor got jQuery 2.2.1 from both had declared an integrity hash, this would mean a cache hit because the identity hash is the same.&lt;/p&gt;
+&lt;p&gt;Awesome idea. I am by no means the first person to have it. The earliest mentions I could find about this was Douglas Crockford describing it in 2008 on a now dead URL but summarized by &lt;a href=&quot;https://github.com/mseaborn&quot;&gt;Mark Seaborn&lt;/a&gt; in his &lt;a href=&quot;https://github.com/mseaborn/nacl-wiki/blob/master/ShareByHash.wiki#proposed-scheme&quot;&gt;discussion of shared caching by hash&lt;/a&gt;. Obviously, many people had thought about this before me. So why hasn&#39;t it been implemented?&lt;/p&gt;
+&lt;p&gt;I got some hints on the &lt;a href=&quot;https://wiki.whatwg.org/wiki/IRC&quot;&gt;whatwg IRC channel&lt;/a&gt; on where to read up on discussions about the idea. These are the reasons they had not to implement it:&lt;/p&gt;
+&lt;h2&gt;Timing Attacks&lt;/h2&gt;
+&lt;p&gt;A timing attack is a way of extrapolating knowledge about some otherwise non-accessible piece of data by timing the duration of an operation relating to it. In the case of content-addressable browser cache the piece of information that is otherwise hidden is the user&#39;s browser history and whether the user is logged in to certain services. The method to obtain this information is to time the duration of a HTTP fetch of a uniquely identified asset that only exists on the service an attacker is out to gain information about. If the fetch returns immediately it is very likely that it was because of a cache hit. If it takes a few hundred milliseconds or returns an error it&#39;s likely that the user hasn&#39;t used the probed service recently.&lt;/p&gt;
+&lt;p&gt;Leaking this sort of information is considered a security vulnerability. Similar vulnerabilities, like checking if a link has been visited with &lt;code&gt;Element.match(&#39;:visited&#39;)&lt;/code&gt;, have been addressed to avoid enabling potential evil third parties to involuntarily track users.&lt;/p&gt;
+&lt;p&gt;The client side version of this timing attack using a &lt;code&gt;fetch&lt;/code&gt;-operation is not much different than the old-school &lt;code&gt;&amp;lt;script src=&amp;quot;https://interestingservice/asset.js&amp;quot; onload=&amp;quot;trackTime()&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;However, if the attacker also controlled the server the user is visiting, which is likely when the attacker can run an attack script, a timing attack is not even needed. The attacker could include the relevant 3rd party assets with the correct subresource integrity, but have the URL be from the local server. If the visitor requests the page, but not the 3rd party asset, you can conclude from the server logs that the user has a history on the 3rd party page.&lt;/p&gt;
+&lt;h2&gt;Cache Poisoning&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://www.owasp.org/index.php/Cache_Poisoning&quot;&gt;Cache poisoning&lt;/a&gt; is the act of injecting malicious content into the user&#39;s cache under a trusted name. Being able to substitute a jQuery cache hit on a user&#39;s browser with a malicious script would be of great value to an evildoer.&lt;/p&gt;
+&lt;p&gt;Since subresource integrity would already provide a guarantee that the content to be cached matches a developer defined cryptographic hash, a cache poisoning attack is fairly difficult to execute. The attacker would have to brute force generate an attack script that matches the same cryptographic hash as the intended target asset to impersonate. This alone is difficult. Furthermore, this would have to be done for exactly the hash function that the specific site that the attacker wants to inject their script in. Choosing a strong enough hash function for your integrity hash would make this an almost impossible task in the first place.&lt;/p&gt;
+&lt;p&gt;On top of that, the attacker would have to lure a potential target user to a phishing site that references the malicious script with the integrity hash of the intended 3rd party asset to inject itself as in the cache. And of course the visitor must not have the asset already in cache, otherwise, the poisoning attack will not work.&lt;/p&gt;
+&lt;p&gt;From my point of view, this attack is potentially devastating, but a successful execution is practically impossible. &lt;a href=&quot;https://en.wikipedia.org/wiki/SHA-2&quot;&gt;SHA-256&lt;/a&gt; has no known conflicts yet, and this attack depends on hitting a conflict for a very specific piece of content.&lt;/p&gt;
+&lt;h2&gt;Alternatives&lt;/h2&gt;
+&lt;p&gt;The shared cache based on content identity was very promising since it would create a collaborative caching ecosystem with no investment from the browsing user, and little investment from site developers. However, there are other ways to improve shared caching of 3rd party assets.&lt;/p&gt;
+&lt;p&gt;One solution is for the frontend community to come together and standardize on a single CDN so all sites reference the same URL&#39;s, thus increasing the chances of cache hits. This makes it a people problem rather than a technical one. For that reason I see very little chance of this ever happening.&lt;/p&gt;
+&lt;p&gt;Another solution is one that the browser users themselves can opt into. The &lt;a href=&quot;https://chrome.google.com/webstore/detail/web-boost-wait-less-brows/ahbkhnpmoamidjgbneafjipbmdfpefad&quot;&gt;Web Boost Chrome extension&lt;/a&gt; maintains a list of blessed URL&#39;s of known and popular 3rd party libraries and the content of the libraries. It intercepts requests to these URL&#39;s and serves a response from the plugins own distribution. The downside is that is the extension ever gets hacked or the author becomes a malicious actor it&#39;s very hard to know and avoid for the users that have this installed.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;References&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;https://en.wikipedia.org/wiki/Content-addressable_storage&lt;/li&gt;
+&lt;li&gt;https://www.w3.org/TR/SRI/&lt;/li&gt;
+&lt;li&gt;https://github.com/w3c/webappsec-subresource-integrity/issues/22&lt;/li&gt;
+&lt;li&gt;https://lists.w3.org/Archives/Public/public-webappsec/2014Oct/0000.html&lt;/li&gt;
+&lt;li&gt;https://github.com/mseaborn/nacl-wiki/blob/master/ShareByHash.wiki&lt;/li&gt;
+&lt;li&gt;http://th.informatik.uni-mannheim.de/people/lucks/HashCollisions/&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+	</entry>
+	
+	<entry>
+		<title>Check your link rot</title>
+		<link href="https://mntr.dk/2015/check-your-link-rot/"/>
+		<updated>2015-04-07T01:10:29+02:00</updated>
+		<id>https://mntr.dk/2015/check-your-link-rot/</id>
+		<content type="html">&lt;p&gt;When we develop websites we often take the greatest care that all details are right. People are checking the design, the implementation, the responsiveness, the performance, and hordes of people are clicking all the links so ensure that everything is as it should be. We congratulate each other, high five our team, put our work in production and move on to other things.&lt;/p&gt;
+&lt;p&gt;However our perfectly crafted website is now all but a snapshot of a distant past. As we move on, the pages stick around and become a part of the ever growing public record of the internet. But even though the site was perfect when concieved it&#39;s now in a new state. Decay. From now on things can only get worse.&lt;/p&gt;
+&lt;!--more--&gt;
+&lt;h2&gt;Link-rot&lt;/h2&gt;
+&lt;p&gt;Even though &lt;a href=&quot;http://www.w3.org/Provider/Style/URI.html&quot;&gt;Cool URIs don&#39;t change&lt;/a&gt;, we ocasionally do link to bad URLs. Not that we know they are bad when we create our links. Maybe they have been good links all along. But then suddenly things happen. Companies go bankrupt, people lose interest in their blogs, domain renewal is forgotten, things are deleted, URLs change in a refactoring or one of a thousand other reasons or non-reasons people have, resulting in the URL you linked to being dead.&lt;/p&gt;
+&lt;p&gt;Worst case is having a page with good information, engaging users so they want to learn more, but when clicking they end up with a &lt;a href=&quot;http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5&quot;&gt;404&lt;/a&gt; or &lt;a href=&quot;http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.5&quot;&gt;500&lt;/a&gt; error. You certainly want to avoid that.&lt;/p&gt;
+&lt;p&gt;Also more subtle things creep in all over the place, and might actually have been there from the start because manual tests don&#39;t reveal them.&lt;/p&gt;
+&lt;p&gt;Redirects can cause slow downs in page navigation. If you are not careful they might even slow down your own internal page navigation, or even worse your static assets. Having &lt;a href=&quot;http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.3.2&quot;&gt;301&lt;/a&gt; or &lt;a href=&quot;http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.3.3&quot;&gt;302&lt;/a&gt; redirects to your own navigation is detrimental to your page performance as you are essentially doubling or tripling each page requests time to first byte, also known as the bottleneck that causes your user to become impatient and switch context. If you have succeeded in actually showing your users the content they were looking for and they are makign the investment to navigate to other pages, you certainly don&#39;t want to keep them waiting.&lt;/p&gt;
+&lt;h2&gt;Dealing with redirects&lt;/h2&gt;
+&lt;p&gt;Some redirects are good and some are bad. As a general rule, if you and everyone else uses redirects correctly you should never have a link to a 301 redirect. 301&#39;s are supposed to be permanent, giving you a guarantee that the content will always be foudn at the redirect target and never at the URL you requestted. In the ideal case you should rewrite the URL in your html immediately when a 301 is encountered to speed up navigation.&lt;/p&gt;
+&lt;p&gt;302 temporary redirects are generally tougher to deal with. Try to reduce the amount you have inside your own site, but some probably can&#39;t be removed entirely. If you are running a multi language site you probably want content negotiation on your site root respond with 302 to redirect the client to the language specific version of your site. If you have a series of multiple 302 redirects you should take a look at your server setup though.&lt;/p&gt;
+&lt;p&gt;302 redirects by external parties are generally difficult to reason about and you probably can&#39;t avoid linking to them unless you do some research to figure out what the other party is doing and if it&#39;s safe to link directly to the redirect target.&lt;/p&gt;
+&lt;p&gt;There are lots of cases where it&#39;s easy to cause accidental redirect chains when we create web pages. Some times we type &lt;code&gt;http://example.com&lt;/code&gt; in the URL and it gets redirected to &lt;code&gt;http://example.com/&lt;/code&gt; (trailing slash). That one is most certainly a pure waste of your visitors time.&lt;/p&gt;
+&lt;p&gt;Another common one these days is the target switching to TLS on their sites, causing a redirect from &lt;code&gt;http&lt;/code&gt; to &lt;code&gt;https&lt;/code&gt;. If you are really unlucky you&#39;ll hit a chain of &lt;code&gt;http -- 301 --&amp;gt; https&lt;/code&gt;, no trailing slash &lt;code&gt;-- 301 --&amp;gt;&lt;/code&gt; trailing slash, &lt;code&gt;/ -- 302 --&amp;gt; /en/&lt;/code&gt;. The first two could be completely avoided.&lt;/p&gt;
+&lt;h2&gt;Tools to the rescue&lt;/h2&gt;
+&lt;p&gt;Dealing with the thousands of links we all generate over a full career as web developers or copy writers is an impossible manual task. We need to use tools to help us keep our references fresh.&lt;/p&gt;
+&lt;p&gt;While dealing with this problem myself I wrote a quick tool to detect broken links. It turned out that I ended up getting a lot of extra functionality almost for free, so it wasn&#39;t much hassle to also start detecting redirect chains like the inefficient one from the last example. I figured that I am not the only one dealing with this problem, so I decided to finally put some polish on what started out as a quick hack, so it can be used by others as well.&lt;/p&gt;
+&lt;p&gt;The tool is &lt;a href=&quot;https://github.com/Munter/hyperlink&quot;&gt;Hyperlink&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I used &lt;a href=&quot;https://github.com/assetgraph/assetgraph&quot;&gt;Assetgraph&lt;/a&gt;, which I know quite well, to set up the scraping and static analysis of all pages and assets. Hyperlink starts our by populating your internal pages and assets, where internal is defined as anything on the same domain. When that part is done it starts scraping all outgoing URLs. Any warning or error encountered on the way is treated as an error condition, including inefficient redirect chains.&lt;/p&gt;
+&lt;p&gt;The current version (2.0.0 as of this writing) only looks at inefficient redirect chains for outgoing links, but an upcoming version will look at inefficient redirects in all types of URLs.&lt;/p&gt;
+&lt;p&gt;I decided to make the output of Hyperlink follow the &lt;a href=&quot;https://testanything.org/&quot;&gt;Test Anything Protocol&lt;/a&gt;, which looks like this:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;TAP version 13
+# Crawling internal assets
+ok 1 loading https://mntr.dk/
+ok 2 loading https://mntr.dk/favicon.ico
+ok 3 loading https://mntr.dk/assets/images/favicon/152.png
+ok 4 loading https://mntr.dk/assets/images/favicon/144.png
+ok 5 loading https://mntr.dk/assets/images/favicon/120.png
+...
+not ok 123 URI should have no redirects - http://www.milwaukeepolicenews.com/
+  ---
+    operator: error
+    expected: &amp;quot;200 http://www.milwaukeepolicenews.com/&amp;quot;
+    actual:   &amp;quot;ECONNRESET http://www.milwaukeepolicenews.com/&amp;quot;
+  ...
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The above example is reduced, but both shows successes and an error. If Hyperlink encounters any errors the exit code of the process will be the number of errors encountered. This means Hyperlink fits well into command line chains, Continuous Integration setups and similar tooling.&lt;/p&gt;
+&lt;p&gt;The TAP output is very close to human readable, but can be further improved by piping the output to any of these wonderful TAP formatters: &lt;a href=&quot;https://www.npmjs.com/package/tap-colorize&quot;&gt;tap-colorize&lt;/a&gt;, &lt;a href=&quot;https://www.npmjs.com/package/tap-difflet&quot;&gt;tap-difflet&lt;/a&gt;, &lt;a href=&quot;https://www.npmjs.com/package/tap-dot&quot;&gt;tap-dot&lt;/a&gt;, &lt;a href=&quot;https://www.npmjs.com/package/tap-json&quot;&gt;tap-json&lt;/a&gt;, &lt;a href=&quot;https://www.npmjs.com/package/tap-min&quot;&gt;tap-min&lt;/a&gt;, &lt;a href=&quot;https://www.npmjs.com/package/tap-nyan&quot;&gt;tap-nyan&lt;/a&gt;, &lt;a href=&quot;https://www.npmjs.com/package/tap-spec&quot;&gt;tap-spec&lt;/a&gt;, &lt;a href=&quot;https://www.npmjs.com/package/tap-xunit&quot;&gt;tap-xunit&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Formatting can be done like so: &lt;code&gt;hyperlink https://mntr.dk | tap-colorize&lt;/code&gt;&lt;/p&gt;
+&lt;h2&gt;Jenkins integration&lt;/h2&gt;
+&lt;p&gt;Obviously running command line tools manually is only fun the first few times, then the novelty subsides and you&#39;d rather do other things. Luckily these days we can get robots to do our dirty work. Where I work we use &lt;a href=&quot;https://jenkins.io/&quot;&gt;Jenkins&lt;/a&gt;, but any CI setup should be able to easily do the same. Here&#39;s how I set up an automated task with Jenkins.&lt;/p&gt;
+&lt;p&gt;I want to keep my company site links fresh, but I don&#39;t need to run link checks on every deploy. On the other hand link rot can happen even when my site is not updated, so the ideal strategy for me is to set up a periodical build, which I chose in the &amp;quot;Build Triggers&amp;quot; section of my task. I chose to go with a daily check at 5am, a time where our CI is usually not busy. The cron schedule for this is simple: &lt;code&gt;H 5 * * *&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;The &amp;quot;Build&amp;quot; section of the task is pretty simple. It&#39;s a single &amp;quot;Execute shell&amp;quot; block with this content:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;npm install hyperlink tap-dot
+node_modules/.bin/hyperlink https://podio.com/site -r | tee site.tap | node_modules/.bin/tap-dot
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The only little piece of magic going on here is in &lt;code&gt;tee site.tap&lt;/code&gt;. &lt;a href=&quot;https://www.gnu.org/software/coreutils/manual/html_node/tee-invocation.html&quot;&gt;Tee&lt;/a&gt; is a very useful little tool that lets you write &lt;code&gt;stdin&lt;/code&gt; to a file, while also piping it to &lt;code&gt;stdout&lt;/code&gt;. This enables me to save the TAP report for later analysis but also get a useful log output in the log section of the running task. In my case I only care for the failing tests and to see things are running, so &lt;a href=&quot;https://www.npmjs.com/package/tap-dot&quot;&gt;tap-dot&lt;/a&gt; is fine for me in the log output.&lt;/p&gt;
+&lt;p&gt;In the &amp;quot;Post-build Actions&amp;quot; section I added a &lt;a href=&quot;https://wiki.jenkins.io/display/JENKINS/TAP+Plugin&quot;&gt;Publish TAP Results&lt;/a&gt; block and configured it with &lt;code&gt;site.tap&lt;/code&gt;. This generates a decent looking report I can use for later. This also generates a nice graph for me on the tasks status page, giving me an overview of changes over time.&lt;/p&gt;
+&lt;p&gt;I haven&#39;t set up any alert actions yet, as this is pretty new and there still might be false negatives that need to be weeded out. But it&#39;s a very good starting point and was quick to set up. So now I have a daily report of broken or inefficient links on my site including the ability to detect changes over time.&lt;/p&gt;
+&lt;h2&gt;Looking into the future&lt;/h2&gt;
+&lt;p&gt;I&#39;m hoping to leverage the fact that Assetgraph is already modelling redirects as assets. This will let me detect all redirects from all URLs in the entire dependency graph. Eventually this could mean that it would be possible to either suggest patches or actually directly update the source files that have inefficient URLs, assuming they are static files and you run Hyperlink against the local files.&lt;/p&gt;
+&lt;p&gt;There are a few improvements to be done still. Most of them are about strengthening Assetgraph to support this specific use case better. It might be useful to be able to have the output copied to your clipboard for later use if you run the tool manually for example.&lt;/p&gt;
+&lt;p&gt;What other ideas do you have for a tool that helps you keep your link rot at bay?&lt;/p&gt;
+</content>
+	</entry>
+	
+	<entry>
+		<title>Getting started with Assetgraph</title>
+		<link href="https://mntr.dk/2014/getting-started-with-assetgraph/"/>
+		<updated>2014-07-02T02:15:00+02:00</updated>
+		<id>https://mntr.dk/2014/getting-started-with-assetgraph/</id>
+		<content type="html">&lt;p&gt;When presented with the challenges of web performance optimization, or any other kind of manipulation of web sites and assets, it is helpful to have a good set of tools at your disposal. Assetgraph aims to be exactly this. A high level interface for your websites, yet still providing low level interfaces for individual assets. A toolkit that lets you build your own tools that fit very specificly to your individual needs.&lt;/p&gt;
+&lt;p&gt;I have spoken at lengths about how Assetgraph distinguishes itself from other build tools by not just being another unix tool configuration wrapper. In the following I will assume you have already heard me sing Assetgraphs praises. If you haven&#39;t, &lt;a href=&quot;https://www.youtube.com/watch?v=N_gRlmmF4Rc&quot;&gt;watch my talk from EmpireJS&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Assetgraph is a node module and this post assumes that you are relatively comfortable writing and executing node scripts. By the end you should have learned enough about Assetgraph to get your hands dirty and write your own tools with it.&lt;/p&gt;
+&lt;p&gt;If you want to see how easy it is to build tools that &lt;a href=&quot;https://mntr.dk/2014/getting-started-with-assetgraph/#writing-files-to-disc&quot;&gt;filter out unused files&lt;/a&gt;, &lt;a href=&quot;https://mntr.dk/2014/getting-started-with-assetgraph/#inlining-small-images&quot;&gt;inlines your images&lt;/a&gt; or &lt;a href=&quot;https://mntr.dk/2014/getting-started-with-assetgraph/#file-revving&quot;&gt;rename files for optimal caching&lt;/a&gt;, you are in for a treat!&lt;/p&gt;
+&lt;p&gt;If you are more into just consuming a well tested out-of-the-box build tool, take a look at &lt;a href=&quot;https://github.com/assetgraph/assetgraph-builder&quot;&gt;assetgraph-builder&lt;/a&gt; or its grunt-wrapper &lt;a href=&quot;https://github.com/Munter/grunt-reduce&quot;&gt;grunt-reduce&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;NOTE: THIS ARTICLE DESCRIBES ASSETGRAPH VERSION 3, NEWER VERSIONS ARE AVAILABLE.&lt;/strong&gt;&lt;/p&gt;
+&lt;!--more--&gt;
+&lt;h2&gt;Assetgraph Vocabulary&lt;/h2&gt;
+&lt;p&gt;Before we get started it&#39;s useful to get some vocabulary straight. If you&#39;re not easily confused you might want to skip to the part where you &lt;a href=&quot;#minimum-assetgraph-lifecycle&quot;&gt;get your hands dirty&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Like many bigger projects Assetgraph has some project specific vocabulary. We&#39;ve tried not to be too magical about the terms we chose, so hopefully you&#39;ll get what things are from their name. Sometimes the inherent properties that go with the names are non-obvious though. This is an attempt at an explanation.&lt;/p&gt;
+&lt;h3&gt;Asset&lt;/h3&gt;
+&lt;p&gt;An Asset in Assetgraph is a model of the contents of a file including its metadata. Assets have a bunch of base properties that are relevant to all asset types, like content-type, url, file name, file extension, loaded state, inlined or not. All Assets have a &lt;code&gt;rawSrc&lt;/code&gt; getter and setter, giving you direct access to the raw file behind the asset. They also have a bunch of convenience methods like &lt;code&gt;md5Hex&lt;/code&gt;, &lt;code&gt;clone&lt;/code&gt; and &lt;code&gt;replaceWith&lt;/code&gt;, along with a &lt;code&gt;populate&lt;/code&gt; method to parse and find outgoing relations in the source code of the asset.&lt;/p&gt;
+&lt;p&gt;The most interesting things happen in the Asset constructors for more specific data types, like &lt;a href=&quot;https://github.com/assetgraph/assetgraph/blob/v3/lib/assets/Html.js&quot;&gt;&lt;code&gt;Html&lt;/code&gt;&lt;/a&gt; or &lt;a href=&quot;https://github.com/assetgraph/assetgraph/blob/v3/lib/assets/JavaScript.js&quot;&gt;&lt;code&gt;JavaScript&lt;/code&gt;&lt;/a&gt;, where each Asset instance also has a highlevel instance of the Assets types data model. For HTML this is the DOM, modelled with &lt;a href=&quot;https://www.npmjs.com/package/jsdom&quot;&gt;jsdom&lt;/a&gt;. For JavaScript it&#39;s the &lt;a href=&quot;https://www.npmjs.com/package/uglify-js&quot;&gt;uglify-js&lt;/a&gt; AST.&lt;/p&gt;
+&lt;p&gt;Using these highlevel interfaces you have the ability to manipulate each assets as you see fit, using familiar highlevel abstractions you would also find in the browser.&lt;/p&gt;
+&lt;p&gt;You might want to take a look at the &lt;a href=&quot;https://github.com/assetgraph/assetgraph/tree/v3/lib/assets&quot;&gt;full list of already implemented Asset types&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Relation&lt;/h3&gt;
+&lt;p&gt;A Relation in Assetgraph defines the edges of the graph. They bind the Assets together and define what depends on what, and from where. Relations not only keep track of which file needs what other file. They also keep track of where exactly the relation came from. Be it a Html Script node src attribute or a CSS background image url token. Relations automatically update references when Assets move around, making the dependency graph stable at all times without broken links.&lt;/p&gt;
+&lt;p&gt;Relations have &lt;code&gt;type&lt;/code&gt;, &lt;code&gt;to&lt;/code&gt;, &lt;code&gt;from&lt;/code&gt; and &lt;code&gt;href&lt;/code&gt; properties that are highly relevant when querying the graph for them.&lt;/p&gt;
+&lt;p&gt;There are a bunch of convenience functions available for more lowlevel graph manipulation, which I&#39;ll skip for now as this is just an introduction.&lt;/p&gt;
+&lt;p&gt;Here is &lt;a href=&quot;https://github.com/assetgraph/assetgraph/tree/v3/lib/relations&quot;&gt;the full list of Assetgraph Relations&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Query&lt;/h3&gt;
+&lt;p&gt;The Assetgraph Query model is a &lt;a href=&quot;https://docs.mongodb.com/manual/tutorial/query-documents/&quot;&gt;MongoDB inspired&lt;/a&gt; model where you can combine some simple boolean AND, OR, NOT statements into a powerful expression to specificly target only the Assets or Relations you are interested in.&lt;/p&gt;
+&lt;p&gt;Each query is a function that matches the properties of each Asset or Relation with the corresponding property or the object in the query. The query object can use strings, numbers, arrays, regexes, user defined functions and even recursive query objects to match the subject.&lt;/p&gt;
+&lt;p&gt;Some examples:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;var query = require(&#39;assetgraph&#39;).query;
+
+var simple = query({
+  type: &#39;Html&#39;,
+  isLoaded: true
+});
+
+var boolean = query.or(
+  {
+    url: /^http:/
+  },
+  {
+    fileName: function(fileName) {
+      return fileName.length &amp;gt; 8;
+    }
+  }
+);
+
+var nested = query({
+  type: &#39;HtmlAnchor&#39;,
+  from: {
+    isInline: false
+  },
+  to: {
+    isImage: true
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Most interactions with Assetgraph happen trough queries to the graph. It is recommended that you get to know the query model if you want to be an effective tool maker. Often times you&#39;ll see simple query objects being passed into Assetgraph methods or Transforms without the &lt;code&gt;query()&lt;/code&gt; call. Assetgraph will automatically turn such objects into queries for your convenience.&lt;/p&gt;
+&lt;p&gt;Take a look at the &lt;a href=&quot;https://github.com/assetgraph/assetgraph/blob/v3/lib/query.js&quot;&gt;Assetgraph Query source code&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Assetgraph&lt;/h3&gt;
+&lt;p&gt;The Assetgraph is the instance that ties all of the above together. This is where the Assets and Relations are stored and where you can use a Query to find them all again. There are a bunch of convenience methods for pre-order and post-order traversal and of course the most used ones &lt;a href=&quot;https://github.com/assetgraph/assetgraph#querying-the-graph&quot;&gt;&lt;code&gt;findAssets&lt;/code&gt;&lt;/a&gt; and &lt;a href=&quot;https://github.com/assetgraph/assetgraph#querying-the-graph&quot;&gt;&lt;code&gt;findRelations&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Transform&lt;/h3&gt;
+&lt;p&gt;Assetgraph is cool, but always diving into the lowlevel code of specific Asset syntax trees becomes bothersome pretty quickly. Transforms are highlevel functions that wrap these lowlevel calls, manipulating the Assetgraph instance in more convenient ways. Assetgraph is extensible, so you can write your own highlevel transforms that fit your specific needs. Assetgraph already comes preloaded with a lot of very useful transforms, most of which are written with web performance optimization in mind, but don&#39;t let yourself be limited by that!&lt;/p&gt;
+&lt;p&gt;There are some fine descriptions of most of the available core transforms in the &lt;a href=&quot;https://github.com/assetgraph/assetgraph/blob/v3/README.md&quot;&gt;Assetgraph README&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Transform Queue&lt;/h3&gt;
+&lt;p&gt;The Transform Queue is what lets you chain a number of transforms together to form a pipeline that applies multiple transforms in order. While all installed transforms are available directly on the Transform Queue &lt;strong&gt;and&lt;/strong&gt; Assetgraph instance for you convenience, they all return a reference to the Transform Queue they are in, enabling you to easily chain Transforms. There are a few convenience methods on the Transform Queue, like &lt;code&gt;if&lt;/code&gt;, &lt;code&gt;endif&lt;/code&gt; and &lt;code&gt;queue&lt;/code&gt; (for quick inline transforms), the most important one is &lt;code&gt;run&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;If you don&#39;t &lt;code&gt;.run()&lt;/code&gt; the Transform Queue, nothing will happen.&lt;/p&gt;
+&lt;h2&gt;Minimum Assetgraph Lifecycle&lt;/h2&gt;
+&lt;p&gt;While tools have great diversity, there will always be some common boilerplate that needs to be written in order to bootstrap them. The same goes for Assetgraph-based ones. This will be an explanation of how a bare minimum setup will look with Assetgraph.&lt;/p&gt;
+&lt;p&gt;First, it&#39;s important to remember that Assetgraph can only work with websites if their internal references are valid. This may sound like an obvious best practice, since that is the only way a website can actually be loaded in a browser. Sadly I need to point this out, as most existing web performance build chains actually set you up with non-working websites, that are then assembled by the tool or some configuration of a static file server. If you want to get the most out of Assetgraph, build your websites so they work in the browser with no magic in between. Incidentally this simplifies your workflow greatly and lessens the pain for front-end developers considerably, so I consider it best pratice.&lt;/p&gt;
+&lt;p&gt;Now, let&#39;s get started. Consider a website structure like this one:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;app/
+├── css
+│   └── main.css
+├── js
+│   ├── main.js
+│   └── jquery.js
+├── images
+│   └── logo.png
+├── index.html
+└── favicon.ico
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Your web application is in a directory called &lt;code&gt;app&lt;/code&gt; and you have som pretty basic scaffolding done already. A simple start for a simple introduction. Note that this is just an example. Assetgraph makes no assumptions about directory structure as it will infer it from your source code.&lt;/p&gt;
+&lt;p&gt;We start out with creating a script that can load the website into an Assetgraph instance:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;var Assetgraph = require(&#39;assetgraph&#39;);
+
+var graph = new AssetGraph({
+  root: &#39;app&#39;
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The above creates an Assetgraph instance, configuring it with &lt;code&gt;app&lt;/code&gt; as the web root. The root must be a string, and may be any valid &lt;code&gt;file://&lt;/code&gt;, &lt;code&gt;http://&lt;/code&gt;, &lt;code&gt;https://&lt;/code&gt; or &lt;code&gt;ftp://&lt;/code&gt; url. If no protocol is specified, a location on local disc is assumed, and the path is resolved as you would expect on the command line.&lt;/p&gt;
+&lt;p&gt;An Assetgraph instance in itself, without any data, is quite useless. So next up we&#39;re interested in actually loading data from our website into the graph. We can do this using the &lt;a href=&quot;https://github.com/assetgraph/assetgraph#assetgraphloadassetsfilenamewildcardurlasset-&quot;&gt;&lt;code&gt;loadAssets&lt;/code&gt;&lt;/a&gt; transform. Loading your &lt;code&gt;index.html&lt;/code&gt; into the graph can be done like so:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;graph.loadAssets(&#39;index.html&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;loadAssets&lt;/code&gt; transform takes a range of inputs to make your life easier. The most useful to you now will be the string or array of strings. Each string, just like before, may be a full url or a protocol relative url in the previously described schemes. All relations in the graph will use the Assetgraph root to resolve paths, not the file system root. If you want to get more advanced with the &lt;code&gt;loadAssets&lt;/code&gt; transform it might be useful to consult the &lt;a href=&quot;https://github.com/assetgraph/assetgraph/blob/v3/lib/transforms/loadAssets.js&quot;&gt;source code&lt;/a&gt; for now.&lt;/p&gt;
+&lt;p&gt;Before we can run the script there is one more piece of boilerplate code that needs to be added. What we are doing when calling Assetgraph transforms with configuration parameters, is actually not executing them right away. Instead, we are appending them to a transform queue, which is what is returned from the transform call. To make this explicit in this example we save the return value in a new variable:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;var queue = graph.loadAssets(&#39;index.html&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;All transforms in the queue are run in the queue scope and will return the queue, making transforms chainable. All transforms will have the assetgraph instance passed to them as the first parameter. The &lt;code&gt;loadAssets&lt;/code&gt; call you just added to your script, won&#39;t actually be run before the transform queue has been started. We do this using the &lt;code&gt;run&lt;/code&gt; method:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;queue.run();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This implementation detail is a bit counter intuitive and can bite you later, so make a note of it now and I will make a note on improving the API. If it hasn&#39;t changed by September 2014 you are hereby mandated to bug me about it on Github.&lt;/p&gt;
+&lt;p&gt;You can now run your script, and &lt;code&gt;index.html&lt;/code&gt; will be loaded into the graph model. However this is not terribly exciting yet, since all that happens is reading a file into memory and not logging any output. So let&#39;s make it a bit more exciting by adding some logging to the console.&lt;/p&gt;
+&lt;h2&gt;Logging and Debugging&lt;/h2&gt;
+&lt;p&gt;Setting up logging is done on the Assetgraph instance, meaning it goes before the transform queue is run. Your script now looks like this:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;var Assetgraph = require(&#39;assetgraph&#39;);
+
+var graph = new AssetGraph({
+  root: &#39;app&#39;
+});
+
+graph.on(&#39;addAsset&#39;, function(asset) {
+  console.log(&#39;addAsset&#39;, asset.toString());
+});
+
+var queue = graph.loadAssets(&#39;index.html&#39;);
+queue.run();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We&#39;re hooking into the Assetgraph emitted event &lt;code&gt;addAsset&lt;/code&gt; and logging some basic information about the event and the asset that was added to the graph. Try running your script now, and you should actually see some output in your console. There are more events you can hook into, to get some more insight into the internals of Assetgraph: &lt;code&gt;addAsset&lt;/code&gt;, &lt;code&gt;removeAsset&lt;/code&gt;, &lt;code&gt;addRelation&lt;/code&gt;, &lt;code&gt;removeRelation&lt;/code&gt;, &lt;code&gt;beforeTransform&lt;/code&gt;, &lt;code&gt;afterTransform&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Furthermore there are some different error levels that are especially useful to hook into in order to get some more useful information for debugging your code: &lt;code&gt;info&lt;/code&gt;, &lt;code&gt;warn&lt;/code&gt;, &lt;code&gt;error&lt;/code&gt;. These last ones are conditions of increasing severity.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;info&lt;/code&gt; is usually used when Assetgraph sees a potential error situation in your web application code, but a fix has already been applied. This could be trying to bundle scripts where one or more of them are leaking strict mode to the global scope, or exceeding the IE max style sheet rules number. Don&#39;t worry too much about &lt;code&gt;info&lt;/code&gt; events.&lt;/p&gt;
+&lt;p&gt;If you see &lt;code&gt;warn&lt;/code&gt; events you should take note, as these usually describe problems in your web application that have to be fixed by you. Things like parse errors or missing files that would cause a 404 response in production etc.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;error&lt;/code&gt; event is the most severe. This is usually only emitted when a completely non-recoverable error has been encountered, or a library throws unexpectedly. It usually makes sense to just stop running your script if you hit this one. It&#39;s also likely that when you get &lt;code&gt;error&lt;/code&gt; level events that we&#39;d like to hear about it, as it might indicate a missing error handling in Assetgraph. Please &lt;a href=&quot;https://github.com/assetgraph/assetgraph/issues/&quot;&gt;report these to us&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Let&#39;s spice it up with one more logging detail, writing some stats about the assets contained in the graph to &lt;code&gt;stderror&lt;/code&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;queue.writeStatsToStderror();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;Populating the Dependency Graph&lt;/h2&gt;
+&lt;p&gt;We&#39;ve now arrived at the core functionality of Assetgraph. The arguably most powerful functionality is the ability to automatically and recursively traverse the dependencies of loaded assets. This, as they say, is where the magic happens, and what enables you to work with your web assets in their entire context without having to define large manifest files telling your tool what files you want included.&lt;/p&gt;
+&lt;p&gt;We are using the &lt;a href=&quot;https://github.com/assetgraph/assetgraph#transformspopulateoptions&quot;&gt;&lt;code&gt;populate&lt;/code&gt;&lt;/a&gt; transform. The transform can be configured in a multitude of ways, in order to describe how to traverse the dependency graph, what to load, and more importantly, what not to load. Think of this as a web scraper. Let it scrape everything and you might end up copying the internet, so &lt;strong&gt;use with care&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Available options are:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;{
+    followRelations: &amp;lt;Assetgraph.query&amp;gt;,
+    startAssets: &amp;lt;Assetgraph.query&amp;gt;,
+    from: &amp;lt;Assetgraph.query&amp;gt;, // Alias for &#39;startAssets&#39;
+    stopAssets: &amp;lt;Assetgraph.query&amp;gt;,
+    concurrency: &amp;lt;int&amp;gt; // Number of concurrent requests. &amp;gt;= 1
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It should be obvious by now that it is useful to get to know the query syntax.&lt;/p&gt;
+&lt;p&gt;For now I&#39;ll assume that we are working with a web site on local disc and that we are only interested in loading assets into Assetgraph that are local as well. So we want to configure the &lt;code&gt;populate&lt;/code&gt; transform to only follow urls that are relative or root relative, while excluding the ones that are absolute or protocol relative (ie. on a different domain).&lt;/p&gt;
+&lt;p&gt;We can do this like so:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;queue.populate({
+  followRelations: {
+    hrefType: [&#39;relative&#39;, &#39;rootRelative&#39;]
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This makes your final bootstrap script look like this:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;var AssetGraph = require(&#39;assetgraph&#39;);
+
+var graph = new AssetGraph({
+  root: &#39;build&#39;
+});
+
+graph.on(&#39;addAsset&#39;, function(asset) {
+  console.log(&#39;addAsset&#39;, asset.toString());
+});
+
+var queue = graph.loadAssets(&#39;index.html&#39;);
+
+queue.populate({
+  followRelations: {
+    hrefType: [&#39;relative&#39;, &#39;rootRelative&#39;]
+  }
+});
+
+// Put further transforms here
+
+queue.writeStatsToStderr();
+
+queue.run();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Congratulations, You have now successfully loaded the entirety of your local files, &lt;strong&gt;which you are referring to in your source code&lt;/strong&gt;, into Assetgraph. You are now bootstrapped with all you need in order to work with your assets.&lt;/p&gt;
+&lt;p&gt;Normally a starter guide would end here, but I&#39;ll throw in some quick examples that might be of use to you, just so you get some ideas of what is possible.&lt;/p&gt;
+&lt;h2&gt;Writing files to disc&lt;/h2&gt;
+&lt;p&gt;Reading files from disc to memory is fun, but it&#39;s even more fun writing them back to disc. Assetgraph lets you rework your dependencies and assets in memory in the transform queue, but the only way you gain anything from that is by actually saving the changes.&lt;/p&gt;
+&lt;p&gt;To write your files back to disc we&#39;ll use the &lt;a href=&quot;https://github.com/assetgraph/assetgraph#assetgraphwriteassetstodiscqueryobj-outroot-root&quot;&gt;&lt;code&gt;writeAssetsToDisc&lt;/code&gt;&lt;/a&gt; transform. The first argument is a query object, which we&#39;ll make pretty broad, only limiting it to assets that have been loaded (trying to write unloaded assets to disc won&#39;t work anyway).&lt;/p&gt;
+&lt;p&gt;The second argument is the root directory to write the files to. You can leave it blank, which will fall back to the Assetgraph instance root, meaning you are overwriting the files in their existing location. Might be useful, but normally you want to separate your source files from your output files. We&#39;re setting a new outRoot &lt;code&gt;demo&lt;/code&gt;.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;queue.writeAssetsToDisc(
+  {
+    isLoaded: true
+  },
+  &#39;demo&#39;
+);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Congratulations, you have now copied all your referenced assets from one directory to another. While you think this might as well have been accomplished with &lt;code&gt;cp -r app demo&lt;/code&gt;, the important point to note is &lt;strong&gt;your referenced assets&lt;/strong&gt;. If you haven&#39;t somehow included a file on your website, it won&#39;t be in &lt;code&gt;demo&lt;/code&gt;. Imagine how many unreferenced files get put into production every day by people forgetting about them. Even worse, imagine a bower component has a malicious php file with a rights escalation somewhere in a test directory, and you just copied it to your production server.&lt;/p&gt;
+&lt;p&gt;So see this as a useful step to only get the essentials on your production site. If something is missing now it&#39;s because you didn&#39;t refer to it. This could easily happen with error pages, favicon.ico, robots.txt or similar. If you want unreferenced files to explicitly be a part of the graph, make sure to include them in the &lt;code&gt;loadAssets&lt;/code&gt; transform.&lt;/p&gt;
+&lt;h2&gt;Inlining small images&lt;/h2&gt;
+&lt;p&gt;Base64 encoding and inlining images. A tedious and stupid workflow. In development you want to work with your raw images to make it easier to maintain and debug, while in production you want to reduce http requests by bundling or inlining. Automation is the way and Assetgraph can help.&lt;/p&gt;
+&lt;p&gt;We&#39;ll limit ourselves to only images that are CSS backgrounds, as inlining content images requires some more specific knowledge of the context. I choose a completely arbitrary number for the file size of images to inline: 4096 bytes. Feel free to experiment on both accounts.&lt;/p&gt;
+&lt;p&gt;We&#39;re using the &lt;a href=&quot;https://github.com/assetgraph/assetgraph#assetgraphinlinerelationsqueryobj&quot;&gt;&lt;code&gt;inlineRelations&lt;/code&gt;&lt;/a&gt; transform, which is dead simple. The only thing that is happening here is just a more complex query than I&#39;ve shown before.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;queue.inlineRelations({
+  type: &#39;CssImage&#39;,
+  to: {
+    isLoaded: true,
+    isInline: false,
+    rawSrc: function(rawSrc) {
+      return rawSrc.length &amp;lt; 4096;
+    }
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;File revving&lt;/h2&gt;
+&lt;p&gt;File revving is a fancy word for revisioning files for optimal caching in the visitor&#39;s browser. The optimal way to serve static assets is with a far future cache expiry, since the fastest request is no request at all.&lt;/p&gt;
+&lt;p&gt;The optimal revisioning strategy is including a hash of the file content in the file name. If the file hasn&#39;t changed, the hash isn&#39;t changed, giving you the ability to optimally use the cache of the visitor&#39;s browser for unchanged files and only load the ones that have changed since the last visit.&lt;/p&gt;
+&lt;p&gt;The easiest way to set up cache headers for static assets is to put them all in the same directory, where the web server will append the correct cache header to the HTTP response.&lt;/p&gt;
+&lt;p&gt;If none of this made sense, then I highly encourage you to read up on optimal asset delivery for browsers. Your users will thank you.&lt;/p&gt;
+&lt;p&gt;This is by far the most complex example, but I want to show it because this is a place where Assetgraph shines compared to other build tools that do not have a dependency graph model at their core.&lt;/p&gt;
+&lt;p&gt;Our strategy for renaming the files in the right order will be &lt;a href=&quot;https://en.wikipedia.org/wiki/Tree_traversal#Post-order&quot;&gt;post order traversal&lt;/a&gt;, renaming leaf nodes in the graph before branch nodes to assure that the hash we calculate is actually based on the correct file contents including hashed references to decendants.&lt;/p&gt;
+&lt;p&gt;First we need to craft a query that will only rename the files we want renamed. Some files might be static, but we still want them to keep their original url and take part in a different caching scheme, designed for rapid updates. Think of HTML pages, RSS feeds etc. I have come up with this query combination to target only the files that are safe to rename:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;var query = AssetGraph.query;
+var moveQuery = query.and(
+  // Find all loaded an non-inlined assets
+  // Except ones of the defined types and fileNames
+  {
+    isLoaded: true,
+    isInline: false,
+    type: query.not([&#39;CacheManifest&#39;, &#39;Rss&#39;]),
+    fileName: query.not([&#39;.htaccess&#39;, &#39;humans.txt&#39;, &#39;robots.txt&#39;, &#39;favicon.ico&#39;])
+  },
+
+  // Exclude HTML-files that are linked to
+  query.not({
+    type: &#39;Html&#39;,
+    incomingRelations: function(relations) {
+      return relations.some(function(rel) {
+        return rel.type === &#39;HtmlAnchor&#39;;
+      });
+    }
+  }),
+
+  query.or(
+    // Exclude initial assets from renaming
+    query.not({
+      isInitial: true
+    }),
+    // Include external HTML templates
+    {
+      type: &#39;Html&#39;,
+      isFragment: true
+    }
+  )
+);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The above is a distillation of a few years of iteration to try and define best practice for the most common use cases. I&#39;d love to go into depth on this, but that&#39;s certainly not fit for a beginners guide. Copy paste this for now and return when you are more comfortable with your understanding of the graph model and the query model.&lt;/p&gt;
+&lt;p&gt;Now all that is left is to run the &lt;a href=&quot;https://github.com/assetgraph/assetgraph#assetgraphmoveassetsinorderqueryobj-newurlfunctionorstring&quot;&gt;&lt;code&gt;moveAssetsInOrder&lt;/code&gt;&lt;/a&gt; transform, which does our post order traversal for us. It takes a query as the first argument and a function as the second. The function is called once per asset and the expected return value is the new file name of the asset.&lt;/p&gt;
+&lt;p&gt;We&#39;re moving all revved files into &lt;code&gt;/static&lt;/code&gt; and appending the first 10 chars of the hash of the file to the file name.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;queue.moveAssetsInOrder(moveQuery, function(asset) {
+  var targetUrl = &#39;/static/&#39;;
+
+  return targetUrl + asset.fileName.split(&#39;.&#39;).shift() + &#39;.&#39; + asset.md5Hex.substr(0, 10) + asset.extension;
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Seems pretty easy right? Just like copying. Except, not. This is where the graph model comes in handy. When moving files by giving them a new url, all their incoming relations automatically get updated. So all the places where the old file name was referenced before are now correctly pointing at the new location. If you&#39;ve ever tried to do this with unix tools, out of context of the website as a whole, you will know what a difficult feature this is. But here you have it, implemented in very few lines of code.&lt;/p&gt;
+&lt;p&gt;Now all that is left to do is configure your web server to serve all files from &lt;code&gt;/static&lt;/code&gt; with far future expires cache headers. Look up how to in your relevant server manual or on StackOverflow.&lt;/p&gt;
+&lt;h2&gt;Summing up&lt;/h2&gt;
+&lt;p&gt;You&#39;ve hopefully learned a bit more about Assetgraph now and are ready to get your hands dirty and try out new stuff on your own. At the very least I hope you&#39;ve gained an understanding of the strengths and weaknesses of the paradigm and the toolset, so I am looking forward to getting grilled with relevant questions here, on &lt;a href=&quot;https://twitter.com/_munter_&quot;&gt;Twitter&lt;/a&gt; or &lt;a href=&quot;https://github.com/assetgraph/assetgraph/issues/&quot;&gt;Github&lt;/a&gt; or on a &lt;a href=&quot;http://lanyrd.com/profile/_munter_/future/&quot;&gt;conference we both attend&lt;/a&gt; over a beer ;)&lt;/p&gt;
+&lt;p&gt;I&#39;m always asked for comparisons with other popular tools, like Grunt, Gulp, Broccoli or similar. Assetgraph is not one to one comparable, as is primarily focuses on fully functional references, while the other tools primarily deal with files. This enables the other tools to do whatever, while Assetgraph needs your page to actually work before you can unlock the full potential. This makes Assetgraph wel suited as a post processing tool that you apply to the already assembled page. If you use one of the other tools to achieve this assembly is up to you.&lt;/p&gt;
+&lt;p&gt;I&#39;m also often asked about run time speed. Assetgraph is generally faster than Grunt, due to the limited file I/O. Assetgraph is generally slower than Gulp, since Gulp has you predefine your files and can run pipes in parallel while Assetgraph has to discover the files incrementally and runs transforms sequentially.&lt;/p&gt;
+&lt;p&gt;If you wish to use Assetgraph for web performance optimization it is my recommendation to make it a part of your deployment step, not your development loop. Web performance optimization is about transforming code to be machine optimized, while your development loop is about optimizing for humans. When you move these concerns out of the development loop you will see that your development speeds up, and the time it takes to run a build suddenly is of much lesser importance.&lt;/p&gt;
+&lt;p&gt;This is the final compilation of all examples, now prettified a bit:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-javascript&quot;&gt;var AssetGraph = require(&#39;assetgraph&#39;);
+var query = AssetGraph.query;
+var moveQuery = query.and(
+        {
+            isLoaded: true,
+            isInline: false,
+            type: query.not([
+                &#39;CacheManifest&#39;,
+                &#39;Rss&#39;
+            ]),
+            fileName: query.not([
+                &#39;.htaccess&#39;,
+                &#39;humans.txt&#39;,
+                &#39;robots.txt&#39;,
+                &#39;favicon.ico&#39;
+            ])
+        },
+        query.not({
+            type: &#39;Html&#39;,
+            incomingRelations: function (relations) {
+                return relations.some(function (rel) {
+                    return rel.type === &#39;HtmlAnchor&#39;;
+                });
+            }
+        }),
+        query.or(
+            query.not({
+                isInitial: true
+            }),
+            {
+                type: &#39;Html&#39;,
+                isFragment: true
+            }
+        )
+    );
+
+var graph = new AssetGraph({
+        root: &#39;build&#39;
+    });
+
+graph.on(&#39;addAsset&#39;, function (asset) {
+        console.log(&#39;addAsset&#39;, asset.toString());
+    })
+    .loadAssets(&#39;index.html&#39;);
+    .populate({
+        followRelations: {
+            hrefType: [&#39;relative&#39;, &#39;rootRelative&#39;]
+        }
+    })
+    .inlineRelations({
+        type: &#39;CssImage&#39;,
+        to: {
+            isLoaded: true,
+            isInline: false,
+            rawSrc: function (rawSrc) {
+                return rawSrc.length &amp;lt; 4096;
+            }
+        }
+    })
+    .moveAssetsInOrder(moveQuery, function (asset) {
+        var targetUrl = &#39;/static/&#39;;
+
+        return targetUrl + asset.fileName.split(&#39;.&#39;).shift() + &#39;.&#39; + asset.md5Hex.substr(0, 10) + asset.extension;
+    })
+    .writeAssetsToDisc({
+        isLoaded: true
+    }, &#39;demo&#39;)
+    .writeStatsToStderr()
+    .run();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I hope you found this introduction useful and now have some inspiration to get started with your own tools. I bet you can come up with some amazing ideas I&#39;ve never thought about.&lt;/p&gt;
+</content>
+	</entry>
+	
+	<entry>
+		<title>I love the Unix philosophy, but...</title>
+		<link href="https://mntr.dk/2014/i-love-the-unix-philosophy-but/"/>
+		<updated>2014-03-23T22:05:29+01:00</updated>
+		<id>https://mntr.dk/2014/i-love-the-unix-philosophy-but/</id>
+		<content type="html">&lt;p&gt;I attended the &lt;a href=&quot;https://edgeconf.com/2014-london&quot;&gt;Edge Conference&lt;/a&gt; in London, for which &lt;a href=&quot;https://twitter.com/triblondon&quot;&gt;Andrew Betts&lt;/a&gt; should receive high praises.&lt;/p&gt;
+&lt;p&gt;During the build system panel some remarks were made about the Unix philosophy in response to a question I asked. I did get a counter argument in, but the available time only allowed for tweet size comments, so I don&#39;t think I got my point across properly. I&#39;ll try to go a bit in depth on my reasoning here.&lt;/p&gt;
+&lt;!--more--&gt;
+&lt;p&gt;My question was this (somewhat rewritten by the moderator):&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Most build scripts, including those generated by scaffolding, are a chain of several discrete steps. Do we need the complexity of having control of every step? Should we instead have opinionated build chains that just get us to our goal instead?&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Most of the panel responded that they like tools that follow the unix philosophy. Small single purpose tools that do one thing only, do it really well, and are chainable using Unix pipes (or a comparable implementation).&lt;/p&gt;
+&lt;p&gt;I agree with this sentiment. I love these tools as well. I live on the command line, and never would have if these tools weren&#39;t so powerful and versatile, individually and in combination.&lt;/p&gt;
+&lt;p&gt;So the feedback from the panel was that a proper set of &lt;em&gt;Unixy&lt;/em&gt; tools put together in the right order would be a better solution than an opinionated tool which keeps some of the internals hidden, reducing the amount of control and adding an aura of magic. Developers like control and dislike magic.&lt;/p&gt;
+&lt;p&gt;And this is where I feel the need for nuance. The simple tool chain works extremely well in cases where you have one file as input and one as output. It might have been through all sorts of compilations and minifications on its way through the pipe, but it&#39;s still just text. And text fits really well into the Unix philosophy. The same is true for a collection of files of similar type, the concatenation case.&lt;/p&gt;
+&lt;p&gt;These simple chains are great for tasks like pre-processing. Going from one type of source file to another, maybe even concatenating. It&#39;s fine for your development loop, where you have to keep things simple, maintainable and fast.&lt;/p&gt;
+&lt;p&gt;The production build case is an entirely different and much more complex beast.&lt;/p&gt;
+&lt;p&gt;In a production build case you are not modifying single files, or collections of files of the same type. You are manipulating a web of files, a dependency graph of nodes (files) and relations (&lt;code&gt;href&lt;/code&gt;, &lt;code&gt;src&lt;/code&gt; et al). If your build chain does not keep these relations intact throughout the process, your data integrity is broken, your web of files turns into a bunch of files without relation.&lt;/p&gt;
+&lt;p&gt;Since the Unix pipes standardize on a very simple interface, raw contextless text, they are an incredibly bad medium for keeping the relational integrity of this dependency graph intact. All of the currently popular build tools suffer from this problem, whether they write temporary files to disk or do incremental compilations in a stream. None of them are able to keep the integrity of the graph alive in a pipe, so they save state in temporary files.&lt;/p&gt;
+&lt;p&gt;You see the symptoms of this in some of the grunt tasks that, without realizing it, deal with graph problems. Problems with the file revision renaming tasks because the build chain loses the references to the files, forcing the use of regexp replacement, using patterns that do not match relative path references correctly. Problems with concatenation tasks because the inclusion order isn&#39;t taken into account, thus forcing the users to write manifest files, a duplication of information already available in a functional web page.&lt;/p&gt;
+&lt;p&gt;There are many more examples of bad pratice workarounds that plugin authors have to make because the Unix philosophy doesn&#39;t give you enough freedom of expression to work with data models that can be kept intact. Combine all of these hacks and workarounds and you get a 600 line grunt configuration file that might just work, but is quite difficult to understand.&lt;/p&gt;
+&lt;p&gt;I use Grunt as an example because it is the oldest and most widely used, but also because the problem&#39;s visibility is proportional to the configuration file size. None of the other competitors like Gulp or Broccoli have solved the dependency graph integrity problem. They might have simpler configuration, which I am a big fan of, but they require the same hacks to unbreak the state of individual assets built out of context.&lt;/p&gt;
+&lt;p&gt;The big problem with all of these approaches are that the transitional states that occur in the Yeoman/Grunt &lt;code&gt;_tmp&lt;/code&gt;-directory are very often broken webs. They are files out of context, and might not even be servable as a web page in themselves at any given point in the build chain. This adds more complexity for the user of these tools, since it is left up to the user to configure how to get from a state of broken web to a state of functional web. Many of these transforms are non-interchangeable, non-reorderable and can generally break easily if misconfigured slightly. So do we really need fine grained control of each of them?&lt;/p&gt;
+&lt;p&gt;After the Unix tool response by the panel, I mentioned powershell because it allows to pass more than text in it&#39;s command line pipes. This is an amazingly powerful concept that enables developers to pass on entire data models with all their references intact.&lt;/p&gt;
+&lt;p&gt;While I usually hate on Microsoft for providing a pretty bad development platform out of the box on Windows, this thing is a real gem. One that is underappreciated and underutilized.&lt;/p&gt;
+&lt;p&gt;When we created &lt;a href=&quot;https://github.com/assetgraph/assetgraph/&quot;&gt;Assetgraph&lt;/a&gt;, we set out to create a data model that could describe a web page in its entirety. It would be a platform for making all of these complex code base transformations easy, while still giving you a guarantee of dependency coherence. However, piping this data model through a Unix pipe would be the death of it, since all state would be lost.&lt;/p&gt;
+&lt;p&gt;Had Unix pipes provided capability of piping objects instead of only text, we wouldn&#39;t have had to create an entire plugin and pipeline architecture, forcing users to write things &amp;quot;the Assetgraph way&amp;quot;. We wouldn&#39;t have to be competitors with &amp;quot;the Grunt way&amp;quot;, &amp;quot;the Gulp way&amp;quot; or &amp;quot;the Broccoli way&amp;quot;. We could instead have focused on strengthening the core data model and let users write decoupled &lt;em&gt;Unixy&lt;/em&gt; functions that made use of this data model, adopting a philosophy of &amp;quot;web in, web out&amp;quot;.&lt;/p&gt;
+&lt;p&gt;All of these implementations are workarounds to the limitations of the Unix pipe. Hack by hack we&#39;ve dug ourselves deeper into our individual holes and have trench wars about which hack is best, yet we still salute Unix pipes as the end all be all of data transformation.&lt;/p&gt;
+&lt;p&gt;So, I love the Unix philosophy, but it leaves some things to be desired for the use case of front end building. The pipe is simply too restrictive.&lt;/p&gt;
+</content>
+	</entry>
+	
+	<entry>
+		<title>PUSH, the post GET paradigm</title>
+		<link href="https://mntr.dk/2014/push-the-post-get-paradigm/"/>
+		<updated>2014-03-17T03:25:29+01:00</updated>
+		<id>https://mntr.dk/2014/push-the-post-get-paradigm/</id>
+		<content type="html">&lt;p&gt;Web performance these days is non-optional. If your web page is slow, you lose business. Our visitors are an impatient lot, and though they are not actively counting milliseconds, web developers have to, just in order to keep visitors&#39; thoughts away from cat videos and flappy bird.&lt;/p&gt;
+&lt;p&gt;In our hunt for milliseconds we, the web developers, are going through a great ordeal just to keep up. We are following &lt;a href=&quot;http://stevesouders.com/hpws/rules.php&quot;&gt;the 14 rules&lt;/a&gt;, we are fighting off marketing&#39;s &lt;a href=&quot;http://www.milwaukeepolicenews.com/&quot;&gt;&lt;s&gt;bigger is better&lt;/s&gt;&lt;/a&gt; and we are setting up automated torture machines for our code. All for the milliseconds, all to keep our visitors&#39; attention.&lt;/p&gt;
+&lt;!--more--&gt;
+&lt;p&gt;Needless to say, reshaping, contorting, torturing your code in order to conform to the 14 rules, also leaves you with something that is utterly unapproachable from a developer&#39;s standpoint. Well optimized production grade static assets are almost as far away from good development practices as you can possibly get. One module per file? Forget it, too expensive. Each image as a separate file? You must be crazy, go decode this base64 or pull out an image editor to reconstruct it from a sprite. And that JavaScript error you&#39;re trying to debug? Start unwrapping uglified concatenated code in your head, under time pressure of course; production is down you know...&lt;/p&gt;
+&lt;p&gt;Unmaintainable. Complex. Prone to errors.&lt;/p&gt;
+&lt;p&gt;We are being held hostage by the protocols that serve us. I hope you haven&#39;t developed Stockholm syndrome by now.&lt;/p&gt;
+&lt;h2&gt;All hail SPDY/HTTP2&lt;/h2&gt;
+&lt;p&gt;Our savior is here. SPDY promises deliverance from all the hardships we have endured. In the future we will all have &lt;a href=&quot;http://www.chromium.org/spdy/spdy-protocol/spdy-protocol-draft3#TOC-2.6.10.1-Compression&quot;&gt;gzipped HTTP headers&lt;/a&gt;, &lt;a href=&quot;http://www.chromium.org/spdy/spdy-protocol/spdy-protocol-draft3#TOC-4.3-One-Connection-Per-Domain&quot;&gt;multiplexed HTTP streams&lt;/a&gt; mitigating a lot of hand shaking and &lt;a href=&quot;https://en.wikipedia.org/wiki/Slow-start&quot;&gt;slow-start&lt;/a&gt;s. All of this with keep-alive that works properly. Oh the rejoicing. And all that for just the cost of &lt;a href=&quot;https://en.wikipedia.org/wiki/SPDY#Design&quot;&gt;adding SSL&lt;/a&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Wait, what?&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Oh yes, no SSL, no SPDY. So we&#39;re getting a lot of nice enhancements, but are also forced to accept the added overhead of a &lt;a href=&quot;https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_handshake&quot;&gt;TLS handshake&lt;/a&gt;, a slow ordeal (&lt;a href=&quot;https://unhandledexpression.com/2013/01/25/5-easy-tips-to-accelerate-ssl/&quot;&gt;tweakable though&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;So suddenly it comes down to a tradeoff. HTTP handshake overhead versus TLS handshake overhead. Which one to choose depends on the nature of your site, and that may change over time. So no simple answers here. Jimmy Durante seems to sum up &lt;a href=&quot;https://www.youtube.com/watch?v=bY-zmJ1VCQI&quot;&gt;this situation&lt;/a&gt; pretty well.&lt;/p&gt;
+&lt;p&gt;And even in this new world of SPDY, our old rules of minification still apply. Concatenation still yields fewer requests. And while the overhead of each request is lower with SPDY, since we&#39;re multiplexing into the existing stream, &lt;a href=&quot;https://en.wikipedia.org/wiki/Latency_(engineering)#Packet-switched_networks&quot;&gt;latency&lt;/a&gt; isn&#39;t a thing that magically vanishes.&lt;/p&gt;
+&lt;p&gt;There may be a way to change the game though.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;: HTTP/2 &lt;a href=&quot;http://http2.github.io/http2-spec/#discover-http&quot;&gt;does not&lt;/a&gt; require SSL.&lt;/p&gt;
+&lt;h2&gt;PUSHing the limits&lt;/h2&gt;
+&lt;p&gt;SPDY offers us an interesting new tool, PUSH streams. Your SPDY enabled server is suddenly able to initiate new multiplexed streams during existing requests, sending stuff the client hasn&#39;t even asked for... yet. While this may sound a bit ominous, the gist of it is that if the server knows what assets the client is about to ask for, it is able to initiate a PUSH stream of those assets, storing them directly in the browser cache before the browser even knew it needed them.&lt;/p&gt;
+&lt;p&gt;That latency I told you about before, caused by GET request round trips? Magically vanished!&lt;/p&gt;
+&lt;p&gt;So SPDY PUSH is great news. Really great actually. If we can eliminate the overhead of initiating a GET request for an asset, the number of assets suddenly isn&#39;t an issue. If the number of assets isn&#39;t an issue, why even bother bundling?&lt;/p&gt;
+&lt;p&gt;Remember those build pipelines I talked about before? Unmaintainable? Complex? Prone to errors? Gone!&lt;/p&gt;
+&lt;p&gt;That&#39;s right. We don&#39;t need them any more. With all the latency overhead in transferring multiple assets gone, we can rethink our production code. You still want to minify code, but you can keep files separate.&lt;/p&gt;
+&lt;p&gt;Our HTTP optimized build systems bundled code in as few files as possible. The previous best strategy was to bundle and serve all static assets with a far future expires header, hoping for a cache hit on the next visit, and thus not even triggering a GET request for the assets at all. A good strategy under the circumstances. However, a single change in just a single module will change the entire bundle, thus triggering a re-download and transferring more bytes overall, with more GET round trips needed.&lt;/p&gt;
+&lt;p&gt;But imagine serving every asset individually. Suddenly a change to a single file means you only need to push that specific file to the browser cache. All the rest of the assets, the ones you haven&#39;t touched? Still cached. No re-download.&lt;/p&gt;
+&lt;p&gt;So you might rightfully ask, how can the server know if the browser has an asset cached already if the browser doesn&#39;t initiate a request for the asset, not sending any request headers for that particular file? Good question. It can&#39;t know. Instead the server just opens the flood gates by starting a PUSH stream for every asset you might need, and starts pumping. For the server and the performance hungry engineer, it&#39;s all about saturating the bandwidth as much as possible and getting that data over the wire.&lt;/p&gt;
+&lt;p&gt;Each PUSH request starts with a header, though. Properly configured, say with an &lt;a href=&quot;https://en.wikipedia.org/wiki/HTTP_ETag&quot;&gt;ETag&lt;/a&gt; with a last modified timestamp or hash of the file content, the browser knows within the first few packets if it needs the rest of the transmission or not. The browser can simply hang up that particular stream. So the server might push a few packets in vain and stop when the browser tells it to. It&#39;s an optimistic and greedy approach. But it does leverage the cache properly, and the extra spent bytes don&#39;t cost a huge time overhead, since the stream termination request goes over the wire in the same time a normal HTTP GET round trip would take just to request some initial data from a server. It&#39;s a tradeoff, lower latency for higher data transfer.&lt;/p&gt;
+&lt;p&gt;So this is the theory. HTTP GET round trip latency removed, improved bandwidth saturation, better cache reuse. Assuming the server knows what to send.&lt;/p&gt;
+&lt;p&gt;So how do we teach our servers about that?&lt;/p&gt;
+&lt;h2&gt;The context aware static file server&lt;/h2&gt;
+&lt;p&gt;The bad news: there is no specified configuration format for telling your server what to push when a specific file is requested. The &lt;a href=&quot;https://twitter.com/nginxorg&quot;&gt;Nginx team&lt;/a&gt; at least &lt;a href=&quot;https://twitter.com/nginxorg/status/436182316042301440&quot;&gt;came up empty handed&lt;/a&gt; when asked about it. So we are on our own for now. However many of us are running some sort of server that we have fine grained control over. Frameworks like &lt;a href=&quot;http://expressjs.com/&quot;&gt;express&lt;/a&gt; certainly make modifications like these easier.&lt;/p&gt;
+&lt;p&gt;So let&#39;s look at some strategies for making your static web server context aware. There are a few I can think of that could be used to seed a web server with enough contextual knowledge to start leveraging SPDY PUSH.&lt;/p&gt;
+&lt;h3&gt;Referrer header mapping&lt;/h3&gt;
+&lt;p&gt;Imagine that your server uses the &lt;a href=&quot;https://en.wikipedia.org/wiki/HTTP_referer&quot;&gt;refer&lt;strike&gt;r&lt;/strike&gt;er&lt;/a&gt; to record the relations between files over time. HTML --&amp;gt; CSS --&amp;gt; Image and so forth. Gradually the server can build up a relation graph and thus predict a set of other assets likely to be requested next when seeing a GET request for an HTML file. The downside here is that this functionality may take some time to warm up, and while it does, your visitors will be paying the price of multiple request latencies.&lt;/p&gt;
+&lt;h3&gt;HAR file mapping&lt;/h3&gt;
+&lt;p&gt;You might be able to build a server that knows how to interpret &lt;a href=&quot;https://blog.stackpath.com/glossary/har-file/&quot;&gt;HAR files&lt;/a&gt;. These files are basically what you are looking at when using your favorite browser developer tools network tab. So you might be able to set up some preproduction step that automates a headless webkit to scrape all your pages and export a series of HAR files, which the server can use to reconstruct a dependency graph of your files.&lt;/p&gt;
+&lt;h3&gt;Static analysis&lt;/h3&gt;
+&lt;p&gt;This one is my favorite, and where I get to pitch one of my personal projects. &lt;a href=&quot;https://github.com/assetgraph/assetgraph/&quot;&gt;Assetgraph&lt;/a&gt; can be used to statically analyze your web assets and create a graph model that contains all files and relations between them. Think of it as a browser that scrapes your entire site, except it only ever visits every resource once and can run directly on your file system. Having your static file server traverse the entire dependency graph on startup would seed it with all the contextual knowledge it needs for SPDY PUSH.&lt;/p&gt;
+&lt;h2&gt;Making it happen&lt;/h2&gt;
+&lt;p&gt;So I wanted to take a look at what is possible with the technology we have now, and see if we can get to the point where performance measurements and comparisons with existing solutions are actually possible. Needless to say, SPDY or HTTP2 aren&#39;t mainstream yet, but it&#39;s nice to be prepared.&lt;/p&gt;
+&lt;p&gt;I started out with the idea of using Assetgraph for all the graph knowledge. I have been a maintainer of the project for a few years, so this is my go to tool for anything web. From there I needed a server that could hook into this graph instance. I know a bit of node.js, so I found a wonderful module by &lt;a href=&quot;https://github.com/indutny&quot;&gt;Fedor Indutny&lt;/a&gt; called &lt;a href=&quot;https://github.com/spdy-http2/node-spdy&quot;&gt;node-spdy&lt;/a&gt;. As luck would have it, node-spdy is compatible with express, which I have touched a few times before.&lt;/p&gt;
+&lt;p&gt;So after a few hours of hacking I came up with &lt;a href=&quot;https://github.com/Munter/expush&quot;&gt;expush&lt;/a&gt;. A small proof of concept static file server that will search for html-files in the web root and auto discover any outgoing dependencies recursively, creating a dependency graph which the file server will look at before it falls back to serving files from the file system. Whenever an HTML-page is requested, the entire dependency sub graph from it is traversed and a PUSH request is initiated for each asset.&lt;/p&gt;
+&lt;p&gt;These are early days. It&#39;s quite buggy and has no finish at all, but it&#39;s enough to prove that this can be done. There are all sorts of bugs, like errors being thrown when reloading a page before the keep-alive dies and &lt;a href=&quot;https://groups.google.com/forum/#!msg/spdy-dev/TetVOinB-LM/rODtXlx1KUQJ&quot;&gt;Chrome not actually supporting ETag cache header response properly&lt;/a&gt;, so every asset is pushed over the wire in its entirety. I do think that this experiment should be enough to do some initial speed tests and comparisons with various other web performance optimization setups.&lt;/p&gt;
+&lt;p&gt;As has hopefully been established by this post, latency is a big killer. If you&#39;re not convinced you should watch &lt;a href=&quot;https://www.youtube.com/watch?v=R8W_6xWphtw&quot;&gt;Paul Irish&#39;s Fluent 2014 keynote&lt;/a&gt;. I hope SPDY push can make a serious contribution to speeding up the web by eliminating a lot of latency issues.&lt;/p&gt;
+&lt;p&gt;I&#39;d love to show you some numbers right now, but alas, I am not a benchmark expert. So if you are one, or know one, please &lt;a href=&quot;https://twitter.com/_munter_&quot;&gt;poke me&lt;/a&gt; and lets see if we can get some numbers and science this thing up!&lt;/p&gt;
+</content>
+	</entry>
+</feed>

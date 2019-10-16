@@ -11,7 +11,11 @@ async function getPopulatedGraph(root, entryPoints) {
   });
 
   await graph.loadAssets(entryPoints);
-  await graph.populate();
+  await graph.populate({
+    followRelations: {
+      crossOrigin: false
+    }
+  });
 
   return graph;
 }
@@ -94,10 +98,67 @@ describe('hashfiles', () => {
       ]);
     });
 
-    it('should keep /favicon.ico unhashed');
-    it('should keep serviceworkers unhashed');
+    it('should keep /favicon.ico unhashed', async () => {
+      const graph = await getPopulatedGraph('favicon', ['index.html']);
 
-    it('should hash static assets');
+      await hashFiles(graph);
+
+      expect(graph.findAssets(), 'to satisfy', [
+        { fileName: 'index.html' },
+        { fileName: 'favicon.ico' }
+      ]);
+    });
+
+    it('should keep serviceworkers unhashed', async () => {
+      const graph = await getPopulatedGraph('serviceworker', ['index.html']);
+
+      await hashFiles(graph);
+
+      expect(graph.findAssets({ isInline: false }), 'to satisfy', [
+        { fileName: 'index.html' },
+        { fileName: 'sw.js' }
+      ]);
+    });
+
+    it('should hash static assets', async () => {
+      const graph = new AssetGraph({
+        root: resolve(__dirname, '../testdata', 'fullpage'),
+        canonicalRoot: 'https://mntr.dk/'
+      });
+
+      await graph.loadAssets('index.html');
+      await graph.populate({
+        followRelations: {
+          crossorigin: false,
+          type: { $not: 'HtmlAnchor' }
+        }
+      });
+
+      await hashFiles(graph);
+
+      expect(
+        graph.findAssets({
+          isInline: false,
+          isLoaded: true,
+          path: { $not: '/static/' }
+        }),
+        'to satisfy',
+        [
+          { path: '/', fileName: 'index.html' },
+          { path: '/', fileName: 'favicon.ico' },
+          { path: '/', fileName: undefined },
+          { path: '/', fileName: 'feed.xml' }
+        ]
+      );
+
+      expect(
+        graph.findAssets({ isInline: false, isLoaded: true, path: '/static/' }),
+        'to have items satisfying',
+        {
+          baseName: expect.it('to satisfy', /\.[0-9a-f]{10}$/)
+        }
+      );
+    });
   });
 
   describe('with staticDir option', () => {
