@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<rss version="2.0">
+<channel>
+  <title>Ajax and XUL</title>
+  <link>/index.html</link>
+  <description>XML graphical interface etc...</description>
+  <item>
+      <title>News  of today</title>
+      <link>/index.html</link>
+      <description>All you need to know about RSS</description>
+  </item>
+</channel>
+</rss>

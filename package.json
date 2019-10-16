@@ -19,11 +19,12 @@
   ],
   "dependencies": {},
   "devDependencies": {
+    "assetgraph": "^6.0.0",
     "coveralls": "^3.0.2",
     "eslint": "^6.0.0",
     "eslint-config-prettier": "^6.0.0",
     "eslint-config-standard": "^14.0.0",
-    "eslint-plugin-mocha": "^6.0.0",
+    "eslint-plugin-mocha": "^6.2.0",
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
@@ -34,9 +35,7 @@
     "prettier": "~1.18.2",
     "sinon": "^7.0.0",
     "unexpected": "^11.0.0-1",
-    "unexpected-dom": "^4.5.0",
-    "unexpected-set": "^2.0.0",
-    "unexpected-sinon": "^10.10.1"
+    "unexpected-assetgraph": "^1.1.1"
   },
   "main": "lib/hashfiles.js",
   "scripts": {
