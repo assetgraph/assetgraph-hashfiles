@@ -136,33 +136,113 @@ describe('hashfiles', () => {
 
       await hashFiles(graph);
 
-      expect(
-        graph.findAssets({
+      const unhashedAssets = graph.findAssets({
+        isInline: false,
+        isLoaded: true,
+        isRedirect: false,
+        type: { $in: ['Html', 'Atom', 'Ico'] }
+      });
+
+      const hasshedAssets = graph
+        .findAssets({
           isInline: false,
           isLoaded: true,
-          path: { $not: '/static/' }
-        }),
-        'to satisfy',
-        [
-          { path: '/', fileName: 'index.html' },
-          { path: '/', fileName: 'favicon.ico' },
-          { path: '/', fileName: undefined },
-          { path: '/', fileName: 'feed.xml' }
-        ]
-      );
+          isRedirect: false
+        })
+        .filter(asset => !unhashedAssets.includes(asset));
 
-      expect(
-        graph.findAssets({ isInline: false, isLoaded: true, path: '/static/' }),
-        'to have items satisfying',
-        {
-          baseName: expect.it('to satisfy', /\.[0-9a-f]{10}$/)
-        }
-      );
+      expect(unhashedAssets, 'to satisfy', [
+        { path: '/', fileName: 'index.html' },
+        { path: '/', fileName: 'favicon.ico' },
+        { path: '/', fileName: 'feed.xml' }
+      ]);
+
+      expect(hasshedAssets, 'to satisfy', [
+        { path: '/static/', fileName: 'main.d35efae1d2.css' },
+        { path: '/static/', fileName: 'syntax.8a0ad6441f.css' },
+        { path: '/static/', fileName: '152.6f37a55225.png' },
+        { path: '/static/', fileName: '144.0366d33047.png' },
+        { path: '/static/', fileName: '120.5f5ca8450f.png' },
+        { path: '/static/', fileName: '114.fe7da9d5c4.png' },
+        { path: '/static/', fileName: '72.df76c12a80.png' },
+        { path: '/static/', fileName: '57.6593084d25.png' },
+        { path: '/static/', fileName: '32.68acab84b2.png' },
+        { path: '/static/', fileName: '16.787eba6fe7.png' },
+        { path: '/static/', fileName: 'opengraph.4d21487d57.png' },
+        { path: '/static/', fileName: 'logo-white.0b1467f089.svg' },
+        { path: '/static/', fileName: 'munter.dafe8ca340.jpg' },
+        { path: '/static/', fileName: 'web-share.e6195970d6.js' },
+        { path: '/static/', fileName: 'social-twitter.c359540fc8.svg' },
+        { path: '/static/', fileName: 'social-github.89959ef390.svg' },
+        { path: '/static/', fileName: 'social-gplus.5223e7bc73.svg' },
+        { path: '/static/', fileName: 'social-linkedin.757b73159a.svg' },
+        { path: '/static/', fileName: 'social-email.487543e65c.svg' },
+        { path: '/static/', fileName: 'social-feed.ad4bea7819.svg' }
+      ]);
     });
   });
 
   describe('with staticDir option', () => {
-    it('should put hashed assets in /__mydir');
+    it('should put hashed assets in /__mydir', async () => {
+      const graph = new AssetGraph({
+        root: resolve(__dirname, '../testdata', 'fullpage'),
+        canonicalRoot: 'https://mntr.dk/'
+      });
+
+      await graph.loadAssets('index.html');
+      await graph.populate({
+        followRelations: {
+          crossorigin: false,
+          type: { $not: 'HtmlAnchor' }
+        }
+      });
+
+      await hashFiles(graph, { staticDir: '__mydir' });
+
+      const unhashedAssets = graph.findAssets({
+        isInline: false,
+        isLoaded: true,
+        isRedirect: false,
+        type: { $in: ['Html', 'Atom', 'Ico'] }
+      });
+
+      const hasshedAssets = graph
+        .findAssets({
+          isInline: false,
+          isLoaded: true,
+          isRedirect: false
+        })
+        .filter(asset => !unhashedAssets.includes(asset));
+
+      expect(unhashedAssets, 'to satisfy', [
+        { path: '/', fileName: 'index.html' },
+        { path: '/', fileName: 'favicon.ico' },
+        { path: '/', fileName: 'feed.xml' }
+      ]);
+
+      expect(hasshedAssets, 'to satisfy', [
+        { path: '/__mydir/', fileName: 'main.d35efae1d2.css' },
+        { path: '/__mydir/', fileName: 'syntax.8a0ad6441f.css' },
+        { path: '/__mydir/', fileName: '152.6f37a55225.png' },
+        { path: '/__mydir/', fileName: '144.0366d33047.png' },
+        { path: '/__mydir/', fileName: '120.5f5ca8450f.png' },
+        { path: '/__mydir/', fileName: '114.fe7da9d5c4.png' },
+        { path: '/__mydir/', fileName: '72.df76c12a80.png' },
+        { path: '/__mydir/', fileName: '57.6593084d25.png' },
+        { path: '/__mydir/', fileName: '32.68acab84b2.png' },
+        { path: '/__mydir/', fileName: '16.787eba6fe7.png' },
+        { path: '/__mydir/', fileName: 'opengraph.4d21487d57.png' },
+        { path: '/__mydir/', fileName: 'logo-white.0b1467f089.svg' },
+        { path: '/__mydir/', fileName: 'munter.dafe8ca340.jpg' },
+        { path: '/__mydir/', fileName: 'web-share.e6195970d6.js' },
+        { path: '/__mydir/', fileName: 'social-twitter.c359540fc8.svg' },
+        { path: '/__mydir/', fileName: 'social-github.89959ef390.svg' },
+        { path: '/__mydir/', fileName: 'social-gplus.5223e7bc73.svg' },
+        { path: '/__mydir/', fileName: 'social-linkedin.757b73159a.svg' },
+        { path: '/__mydir/', fileName: 'social-email.487543e65c.svg' },
+        { path: '/__mydir/', fileName: 'social-feed.ad4bea7819.svg' }
+      ]);
+    });
   });
 
   describe('with cdnRoot option', () => {
