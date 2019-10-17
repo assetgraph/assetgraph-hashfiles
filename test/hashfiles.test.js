@@ -246,7 +246,18 @@ describe('hashfiles', () => {
   });
 
   describe('with cdnRoot option', () => {
-    it('should put hashed assets in /myCdnRoot');
+    it('should put hashed assets in /myCdnRoot', async () => {
+      const graph = await getPopulatedGraph('cdntest', ['index.html']);
+
+      await hashFiles(graph);
+
+      const allFileAssets = graph.findAssets({
+        isLoaded: true,
+        isInline: false
+      });
+
+      expect(allFileAssets, 'to satisfy', []);
+    });
 
     describe('with cdnFlash option', () => {});
 
