@@ -1,6 +1,6 @@
 if (typeof navigator.share === 'function') {
   var shareLinks = document.querySelectorAll(
-    'a[href^="https://twitter.com/intent/tweet"'
+    'a[href^="https://twitter.com/intent/tweet"]'
   );
 
   [].forEach.call(shareLinks, function(anchor) {
