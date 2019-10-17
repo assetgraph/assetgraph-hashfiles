@@ -17,7 +17,9 @@
   "files": [
     "lib"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "urltools": "^0.4.1"
+  },
   "devDependencies": {
     "assetgraph": "^6.0.0",
     "coveralls": "^3.0.2",
@@ -36,7 +38,8 @@
     "prettier": "~1.18.2",
     "sinon": "^7.0.0",
     "unexpected": "^11.0.0-1",
-    "unexpected-assetgraph": "^1.1.1"
+    "unexpected-assetgraph": "^1.1.2",
+    "unexpected-dom": "^4.14.2"
   },
   "main": "lib/hashfiles.js",
   "scripts": {

@@ -1,7 +1,8 @@
 const { resolve } = require('path');
 const expect = require('unexpected')
   .clone()
-  .use(require('unexpected-assetgraph'));
+  .use(require('unexpected-assetgraph'))
+  .use(require('unexpected-dom'));
 const AssetGraph = require('assetgraph');
 const hashFiles = require('../lib/hashfiles');
 
@@ -13,7 +14,7 @@ async function getPopulatedGraph(root, entryPoints) {
   await graph.loadAssets(entryPoints);
   await graph.populate({
     followRelations: {
-      crossOrigin: false
+      crossorigin: false
     }
   });
 
@@ -249,18 +250,205 @@ describe('hashfiles', () => {
     it('should put hashed assets in /myCdnRoot', async () => {
       const graph = await getPopulatedGraph('cdntest', ['index.html']);
 
-      await hashFiles(graph);
+      await hashFiles(graph, { cdnRoot: 'https://mycdn.com' });
 
-      const allFileAssets = graph.findAssets({
-        isLoaded: true,
-        isInline: false
-      });
+      const allFileAssets = graph
+        .findAssets({
+          isLoaded: true,
+          isInline: false
+        })
+        .sort((a, b) => a.fileName.localeCompare(b.fileName));
 
-      expect(allFileAssets, 'to satisfy', []);
+      expect(allFileAssets, 'to satisfy', [
+        {
+          origin: 'file://',
+          path: '/static/',
+          fileName: 'foo.34aa4278e7.jar'
+        },
+        {
+          origin: 'file://',
+          path: '/static/',
+          fileName: 'foo.d41d8cd98f.swf'
+        },
+        {
+          origin: 'file://',
+          path: '/',
+          fileName: 'index.html'
+        },
+        {
+          origin: 'file://',
+          path: '/static/',
+          fileName: 'main.eac26617cf.js'
+        },
+        {
+          origin: 'file://',
+          path: '/static/',
+          fileName: 'main.tpl.a8b2526ad6.html'
+        },
+        {
+          origin: 'https://mycdn.com',
+          path: '/',
+          fileName: 'simple.3831d504d8.js'
+        },
+        {
+          origin: 'https://mycdn.com',
+          path: '/',
+          fileName: 'simple.829e4ff717.css'
+        },
+        {
+          origin: 'file://',
+          path: '/static/',
+          fileName: 'style.58c0948f5e.css'
+        },
+        {
+          origin: 'file://',
+          path: '/',
+          fileName: 'sw.js'
+        },
+        {
+          origin: 'file://',
+          path: '/static/',
+          fileName: 'theBehavior.aa4e8a29e8.htc'
+        },
+        {
+          origin: 'https://mycdn.com',
+          path: '/',
+          fileName: 'theScript.008a3a1a0a.js'
+        },
+        {
+          origin: 'https://mycdn.com',
+          path: '/',
+          fileName: 'turtle.d70f0a4958.jpg'
+        }
+      ]);
     });
 
-    describe('with cdnFlash option', () => {});
+    it('should put crossorigin attributes on HtmlRelations to CDN assets', async () => {
+      const graph = await getPopulatedGraph('cdntest', ['index.html']);
 
-    describe('with cdnHtml option', () => {});
+      await hashFiles(graph, { cdnRoot: 'https://mycdn.com' });
+
+      expect(
+        graph.findRelations({
+          from: { fileName: 'index.html' },
+          type: { $in: ['HtmlScript', 'HtmlStyle'] },
+          to: { isInline: false }
+        }),
+        'to satisfy',
+        [
+          {
+            type: 'HtmlStyle',
+            href: 'https://mycdn.com/simple.829e4ff717.css',
+            crossorigin: true,
+            hrefType: 'absolute',
+            node: expect.it('to have attribute', 'crossorigin')
+          },
+          {
+            type: 'HtmlStyle',
+            href: 'static/style.58c0948f5e.css',
+            crossorigin: false,
+            hrefType: 'relative',
+            node: expect.it('not to have attribute', 'crossorigin')
+          },
+          {
+            type: 'HtmlScript',
+            href: 'https://mycdn.com/simple.3831d504d8.js',
+            crossorigin: true,
+            hrefType: 'absolute',
+            node: expect.it('to have attribute', 'crossorigin')
+          },
+          {
+            type: 'HtmlScript',
+            href: 'static/main.eac26617cf.js',
+            crossorigin: false,
+            hrefType: 'relative',
+            node: expect.it('not to have attribute', 'crossorigin')
+          }
+        ]
+      );
+    });
+
+    it('should have absolute hreftypes to CDN assets', async () => {
+      const graph = await getPopulatedGraph('cdntest', ['index.html']);
+
+      await hashFiles(graph, { cdnRoot: 'https://mycdn.com' });
+
+      expect(
+        graph.findRelations({
+          to: { origin: 'https://mycdn.com' }
+        }),
+        'to have items satisfying',
+        {
+          hrefType: 'absolute'
+        }
+      );
+    });
+
+    it('should have protocol-relative hreftypes to CDN assets', async () => {
+      const graph = await getPopulatedGraph('cdntest', ['index.html']);
+
+      await hashFiles(graph, { cdnRoot: '//mycdn.com' });
+
+      expect(
+        graph.findRelations({
+          crossorigin: true
+        }),
+        'to have items satisfying',
+        {
+          hrefType: 'protocolRelative'
+        }
+      );
+    });
+
+    describe('with cdnFlash option', () => {
+      it('should move Flash assets to the CDN', async () => {
+        const graph = await getPopulatedGraph('cdntest', ['index.html']);
+
+        await hashFiles(graph, {
+          cdnRoot: 'https://mycdn.com',
+          cdnFlash: true
+        });
+
+        const flashAssets = graph.findAssets({
+          isLoaded: true,
+          isInline: false,
+          type: 'Flash'
+        });
+
+        expect(flashAssets, 'to satisfy', [
+          {
+            origin: 'https://mycdn.com',
+            path: '/',
+            fileName: 'foo.d41d8cd98f.swf'
+          }
+        ]);
+      });
+    });
+
+    describe('with cdnHtml option', () => {
+      it('should move Flash assets to the CDN', async () => {
+        const graph = await getPopulatedGraph('cdntest', ['index.html']);
+
+        await hashFiles(graph, {
+          cdnRoot: 'https://mycdn.com',
+          cdnHtml: true
+        });
+
+        const htmlFragments = graph.findAssets({
+          isLoaded: true,
+          isInline: false,
+          type: 'Html',
+          isFragment: true
+        });
+
+        expect(htmlFragments, 'to satisfy', [
+          {
+            origin: 'https://mycdn.com',
+            path: '/',
+            fileName: 'main.tpl.a8b2526ad6.html'
+          }
+        ]);
+      });
+    });
   });
 });
