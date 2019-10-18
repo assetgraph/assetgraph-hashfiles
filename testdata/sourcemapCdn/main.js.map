@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "file": "main.js",
+  "sourceRoot": "",
+  "sources": [
+    "main.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;AAAA,MAAA;;EAAA,MAAA,GAAS,QAAA,CAAC,CAAD,CAAA;WAAO,CAAA,GAAI;EAAX;;EAET,KAAA,CAAM,MAAA,CAAO,EAAP,CAAN;AAFA",
+  "sourcesContent": [
+    "console.log('this is not the real source');\n"
+  ]
+}

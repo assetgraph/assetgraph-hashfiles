@@ -14,7 +14,8 @@ async function getPopulatedGraph(root, entryPoints) {
   await graph.loadAssets(entryPoints);
   await graph.populate({
     followRelations: {
-      crossorigin: false
+      crossorigin: false,
+      type: { $nin: ['JavaScriptFetch', 'SourceMapSource', 'SourceMapFile'] }
     }
   });
 
@@ -278,7 +279,12 @@ describe('hashfiles', () => {
         {
           origin: 'file://',
           path: '/static/',
-          fileName: 'main.eac26617cf.js'
+          fileName: 'main.cd90e77c46.js'
+        },
+        {
+          origin: 'file://',
+          path: '/static/',
+          fileName: 'main.js.71801f227c.map'
         },
         {
           origin: 'file://',
@@ -323,6 +329,56 @@ describe('hashfiles', () => {
       ]);
     });
 
+    it('should put hashed sourcemaps /myCdnRoot', async () => {
+      const graph = new AssetGraph({
+        root: resolve(__dirname, '../testdata', 'sourcemapCdn')
+      });
+
+      await graph.loadAssets(['index.html']);
+      await graph.populate({
+        followRelations: {
+          crossorigin: false
+        }
+      });
+
+      await hashFiles(graph, { cdnRoot: 'https://mycdn.com' });
+
+      const allFileAssets = graph
+        .findAssets({
+          isLoaded: true,
+          isInline: false
+        })
+        .sort((a, b) => a.fileName.localeCompare(b.fileName));
+
+      expect(allFileAssets, 'to satisfy', [
+        {
+          origin: 'file://',
+          path: '/',
+          fileName: 'index.html'
+        },
+        {
+          origin: 'https://mycdn.com',
+          path: '/',
+          fileName: 'main.6955839b28.js'
+        },
+        {
+          origin: 'https://mycdn.com',
+          path: '/',
+          fileName: 'main.c1453512ae.coffee'
+        },
+        {
+          origin: 'https://mycdn.com',
+          path: '/',
+          fileName: 'main.js.07d32556c8.map'
+        }
+      ]);
+
+      expect(graph, 'to contain relation', {
+        to: { type: 'SourceMap' },
+        hrefType: 'absolute'
+      });
+    });
+
     it('should put crossorigin attributes on HtmlRelations to CDN assets', async () => {
       const graph = await getPopulatedGraph('cdntest', ['index.html']);
 
@@ -340,47 +396,27 @@ describe('hashfiles', () => {
             type: 'HtmlStyle',
             href: 'https://mycdn.com/simple.829e4ff717.css',
             crossorigin: true,
-            hrefType: 'absolute',
             node: expect.it('to have attribute', 'crossorigin')
           },
           {
             type: 'HtmlStyle',
             href: 'static/style.58c0948f5e.css',
             crossorigin: false,
-            hrefType: 'relative',
             node: expect.it('not to have attribute', 'crossorigin')
           },
           {
             type: 'HtmlScript',
             href: 'https://mycdn.com/simple.3831d504d8.js',
             crossorigin: true,
-            hrefType: 'absolute',
             node: expect.it('to have attribute', 'crossorigin')
           },
           {
             type: 'HtmlScript',
-            href: 'static/main.eac26617cf.js',
+            href: 'static/main.cd90e77c46.js',
             crossorigin: false,
-            hrefType: 'relative',
             node: expect.it('not to have attribute', 'crossorigin')
           }
         ]
-      );
-    });
-
-    it('should have absolute hreftypes to CDN assets', async () => {
-      const graph = await getPopulatedGraph('cdntest', ['index.html']);
-
-      await hashFiles(graph, { cdnRoot: 'https://mycdn.com' });
-
-      expect(
-        graph.findRelations({
-          to: { origin: 'https://mycdn.com' }
-        }),
-        'to have items satisfying',
-        {
-          hrefType: 'absolute'
-        }
       );
     });
 
