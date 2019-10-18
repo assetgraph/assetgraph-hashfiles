@@ -462,7 +462,7 @@ describe('hashfiles', () => {
     });
 
     describe('with cdnHtml option', () => {
-      it('should move Flash assets to the CDN', async () => {
+      it.skip('should move Html assets to the CDN', async () => {
         const graph = await getPopulatedGraph('cdntest', ['index.html']);
 
         await hashFiles(graph, {
