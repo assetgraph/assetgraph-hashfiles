@@ -304,7 +304,7 @@ describe('hashfiles', () => {
         {
           origin: 'file://',
           path: '/static/',
-          fileName: 'style.58c0948f5e.css'
+          fileName: 'style.c3a9d85076.css'
         },
         {
           origin: 'file://',
@@ -314,12 +314,12 @@ describe('hashfiles', () => {
         {
           origin: 'file://',
           path: '/static/',
-          fileName: 'theBehavior.aa4e8a29e8.htc'
+          fileName: 'theBehavior.31de722f4d.htc'
         },
         {
           origin: 'https://mycdn.com',
           path: '/',
-          fileName: 'theScript.008a3a1a0a.js'
+          fileName: 'theScript.0d6f8b103e.js'
         },
         {
           origin: 'https://mycdn.com',
@@ -400,7 +400,7 @@ describe('hashfiles', () => {
           },
           {
             type: 'HtmlStyle',
-            href: 'static/style.58c0948f5e.css',
+            href: 'static/style.c3a9d85076.css',
             crossorigin: false,
             node: expect.it('not to have attribute', 'crossorigin')
           },
