@@ -1,1 +1,1 @@
-alert("The script!");
+alert('The script!');
