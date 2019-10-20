@@ -1,3 +1,7 @@
+### v1.0.1 (2019-10-20)
+
+- [Fix breaking of query strings when moving assets around](https://github.com/assetgraph/assetgraph-hashfiles/commit/e5cf2471677b2c4d100f20ad7a38f8f4c8566f21) ([Peter Müller](mailto:munter@fumle.dk))
+
 ### v1.0.0 (2019-10-20)
 
 - [Update mocha to 6.2.2](https://github.com/assetgraph/assetgraph-hashfiles/commit/d6ae2c9d4b419e789040e98daafc283849dcf693) ([Peter Müller](mailto:munter@fumle.dk))
