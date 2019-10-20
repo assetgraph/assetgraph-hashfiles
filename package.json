@@ -1,7 +1,7 @@
 {
-  "name": "assetgraph-transform-hashfiles",
-  "description": "Assetgraph transform to rename files for immutable HTTP caching",
-  "repository": "git://github.com/assetgraph/assetgraph-transform-hashfiles.git",
+  "name": "assetgraph-hashfiles",
+  "description": "Assetgraph-based function to rename files for immutable HTTP caching",
+  "repository": "git://github.com/assetgraph/assetgraph-hashfiles.git",
   "version": "0.0.0",
   "license": "BSD-3-Clause",
   "maintainers": [
