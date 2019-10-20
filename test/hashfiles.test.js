@@ -145,7 +145,7 @@ describe('hashfiles', () => {
         type: { $in: ['Html', 'Atom', 'Ico'] }
       });
 
-      const hasshedAssets = graph
+      const hashedAssets = graph
         .findAssets({
           isInline: false,
           isLoaded: true,
@@ -159,7 +159,7 @@ describe('hashfiles', () => {
         { path: '/', fileName: 'feed.xml' }
       ]);
 
-      expect(hasshedAssets, 'to satisfy', [
+      expect(hashedAssets, 'to satisfy', [
         { path: '/static/', fileName: 'main.d35efae1d2.css' },
         { path: '/static/', fileName: 'syntax.8a0ad6441f.css' },
         { path: '/static/', fileName: '152.6f37a55225.png' },
@@ -181,6 +181,32 @@ describe('hashfiles', () => {
         { path: '/static/', fileName: 'social-email.487543e65c.svg' },
         { path: '/static/', fileName: 'social-feed.ad4bea7819.svg' }
       ]);
+
+      expect(unhashedAssets[0], 'to satisfy', {
+        text: expect
+          .it('to contain', 'main.d35efae1d2.css')
+          .and('to contain', 'syntax.8a0ad6441f.css')
+      });
+    });
+
+    it('should retain query strings on hashed assets', async () => {
+      const graph = await getPopulatedGraph('querystring', ['index.html']);
+
+      await hashFiles(graph);
+
+      expect(graph.findAssets()[0], 'to satisfy', {
+        fileName: 'index.html',
+        outgoingRelations: [
+          {
+            href: 'static/main.6bc5650065.css?foo=bar',
+            to: {
+              path: '/static/',
+              fileName: 'main.6bc5650065.css',
+              query: { foo: 'bar' }
+            }
+          }
+        ]
+      });
     });
   });
 
@@ -208,7 +234,7 @@ describe('hashfiles', () => {
         type: { $in: ['Html', 'Atom', 'Ico'] }
       });
 
-      const hasshedAssets = graph
+      const hashedAssets = graph
         .findAssets({
           isInline: false,
           isLoaded: true,
@@ -222,7 +248,7 @@ describe('hashfiles', () => {
         { path: '/', fileName: 'feed.xml' }
       ]);
 
-      expect(hasshedAssets, 'to satisfy', [
+      expect(hashedAssets, 'to satisfy', [
         { path: '/__mydir/', fileName: 'main.d35efae1d2.css' },
         { path: '/__mydir/', fileName: 'syntax.8a0ad6441f.css' },
         { path: '/__mydir/', fileName: '152.6f37a55225.png' },
