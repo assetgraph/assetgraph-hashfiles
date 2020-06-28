@@ -1,0 +1,7 @@
+<link rel="preload" href="/gatsby/page-data.json" as="fetch">
+<link rel="preload" href="/gatsby/page-data-2.json" as="fetch">
+
+<script>
+  fetch('/gatsby/' + 'page-data.json').then(response => response.json()).then(data => console.log(data));
+  fetch('/gatsby/page-data-2.json').then(response => response.json()).then(data => console.log(data));
+</script>
