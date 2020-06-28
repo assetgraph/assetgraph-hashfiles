@@ -122,6 +122,20 @@ describe('hashfiles', () => {
       ]);
     });
 
+    it('should keep preloaded assets that have no other incoming relation unhashed', async () => {
+      const graph = await getPopulatedGraph('unreferenced-preload', [
+        'index.html'
+      ]);
+
+      await hashFiles(graph);
+
+      expect(graph.findAssets({ isInline: false }), 'to satisfy', [
+        { fileName: 'index.html' },
+        { fileName: 'page-data.json' },
+        { fileName: 'page-data-2.cabd62c27f.json' }
+      ]);
+    });
+
     it('should hash static assets', async () => {
       const graph = new AssetGraph({
         root: resolve(__dirname, '../testdata', 'fullpage'),
