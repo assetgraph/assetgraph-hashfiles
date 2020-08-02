@@ -1,4 +1,16 @@
-### v1.0.1 (2019-10-20)
+### v1.1.0 (2020-08-02)
+
+#### Pull requests
+
+- [#4](https://github.com/assetgraph/assetgraph-hashfiles/pull/4) Warn on cycles ([Peter Müller](mailto:munter@fumle.dk))
+- [#2](https://github.com/assetgraph/assetgraph-hashfiles/pull/2) Adopt the moveAssetsInOrder transform from core ([Andreas Lind](mailto:andreaslindpetersen@gmail.com))
+- [#1](https://github.com/assetgraph/assetgraph-hashfiles/pull/1) Avoid renaming asset with only incoming pre-browsing directives ([Peter Müller](mailto:munter@fumle.dk))
+
+#### Commits to master
+
+- [Add .vscode debugger launch config](https://github.com/assetgraph/assetgraph-hashfiles/commit/8b87485c8be3bdb98d9e3dc8fce617c66571a5b0) ([Andreas Lind](mailto:andreaslindpetersen@gmail.com))
+
+### v1.0.1 (2019-10-21)
 
 - [Fix breaking of query strings when moving assets around](https://github.com/assetgraph/assetgraph-hashfiles/commit/e5cf2471677b2c4d100f20ad7a38f8f4c8566f21) ([Peter Müller](mailto:munter@fumle.dk))
 
