@@ -1,3 +1,7 @@
+### v1.1.1 (2020-08-02)
+
+- [Minor patch to cyclic dependency graph error message](https://github.com/assetgraph/assetgraph-hashfiles/commit/90d1fb035d3da607d3904d8a5d2899ae8c57b428) ([Peter Müller](mailto:munter@fumle.dk))
+
 ### v1.1.0 (2020-08-02)
 
 #### Pull requests
