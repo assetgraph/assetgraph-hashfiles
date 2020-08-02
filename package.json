@@ -39,7 +39,9 @@
     "sinon": "^7.0.0",
     "unexpected": "^11.0.0-1",
     "unexpected-assetgraph": "^1.1.2",
-    "unexpected-dom": "^4.14.2"
+    "unexpected-dom": "^4.14.2",
+    "unexpected-set": "^2.0.1",
+    "unexpected-sinon": "^10.11.2"
   },
   "main": "lib/hashfiles.js",
   "scripts": {
