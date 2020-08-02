@@ -38,7 +38,7 @@ describe('moveAssetsInOrder', function() {
     expect(spy, 'to have calls satisfying', () => {
       spy({
         message:
-          'transforms.moveAssetsInOrder: Cyclic dependencies detected. All files could not be moved',
+          'moveAssetsInOrder: Cyclic dependencies detected. All files could not be moved',
         relations: expect.it('with set semantics', 'to satisfy', [
           {
             from: {
